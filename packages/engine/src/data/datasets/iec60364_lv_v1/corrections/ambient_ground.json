@@ -1,0 +1,42 @@
+{
+  "id": "corr_ambient_ground_v1",
+  "environment": "ground",
+  "baseTemperatureC": 20,
+  "sourceRef": "IEC 60364-5-52 Table B.52.15 / Schneider Guide Fig G13",
+  "tables": {
+    "PVC": {
+      "rows": [
+        { "ambientTempC": 10, "factor": 1.10 },
+        { "ambientTempC": 15, "factor": 1.05 },
+        { "ambientTempC": 20, "factor": 1.00 },
+        { "ambientTempC": 25, "factor": 0.95 },
+        { "ambientTempC": 30, "factor": 0.89 },
+        { "ambientTempC": 35, "factor": 0.84 },
+        { "ambientTempC": 40, "factor": 0.77 },
+        { "ambientTempC": 45, "factor": 0.71 },
+        { "ambientTempC": 50, "factor": 0.63 },
+        { "ambientTempC": 55, "factor": 0.55 },
+        { "ambientTempC": 60, "factor": 0.45 }
+      ]
+    },
+    "XLPE": {
+      "rows": [
+        { "ambientTempC": 10, "factor": 1.07 },
+        { "ambientTempC": 15, "factor": 1.04 },
+        { "ambientTempC": 20, "factor": 1.00 },
+        { "ambientTempC": 25, "factor": 0.96 },
+        { "ambientTempC": 30, "factor": 0.93 },
+        { "ambientTempC": 35, "factor": 0.89 },
+        { "ambientTempC": 40, "factor": 0.85 },
+        { "ambientTempC": 45, "factor": 0.80 },
+        { "ambientTempC": 50, "factor": 0.76 },
+        { "ambientTempC": 55, "factor": 0.71 },
+        { "ambientTempC": 60, "factor": 0.65 },
+        { "ambientTempC": 65, "factor": 0.60 },
+        { "ambientTempC": 70, "factor": 0.53 },
+        { "ambientTempC": 75, "factor": 0.46 },
+        { "ambientTempC": 80, "factor": 0.38 }
+      ]
+    }
+  }
+}

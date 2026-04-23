@@ -1,0 +1,14 @@
+{
+  "datasetId": "iec60364_lv_v1",
+  "standard": "IEC60364",
+  "scope": "LV",
+  "title": "IEC 60364-5-52 Low Voltage Cable Sizing Dataset",
+  "sourceName": "Schneider Electric Electrical Installation Guide / IEC 60364-5-52",
+  "sourceEdition": "IEC 60364-5-52:2009+AMD1:2011 CSV2:2018",
+  "sourceNotes": "Derived from publicly available Schneider Electric Electrical Installation Guide (electrical-installation.org) and IEC standard tables",
+  "licensingNote": "internal-use, derived from published reference data",
+  "createdAt": "2026-04-22T00:00:00Z",
+  "updatedAt": "2026-04-22T00:00:00Z",
+  "approvedBy": null,
+  "status": "draft"
+}

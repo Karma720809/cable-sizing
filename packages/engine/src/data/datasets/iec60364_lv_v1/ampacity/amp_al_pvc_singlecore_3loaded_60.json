@@ -1,0 +1,102 @@
+{
+  "id": "amp_al_pvc_singlecore_3loaded_60",
+  "conductorMaterial": "Al",
+  "insulationType": "PVC",
+  "loadedConductors": 3,
+  "cableType": "single-core",
+  "frequencyHz": 60,
+  "unit": "A",
+  "sourceRef": "IEC 60364-5-52:2009 Table B.52.11 (Al / PVC / single-core / 3-loaded). Method F = touching trefoil (column 5); Method G = spaced flat, horizontal, 1 × De (column 7). 70 °C conductor, 30 °C ambient. Al cables are not standardised below 16 mm²; 16 mm² row is N/A in source. [5B-AMP: values replicated at 60 Hz under IEC 60364-5-52:2009 Annex B 50/60 Hz equivalence clause for LV conductor CSA ≤ 300 mm²]",
+  "tables": {
+    "F": {
+      "description": "Single-core cables in free air, touching trefoil — Al/PVC 3L (IEC B.52.11 col. 5)",
+      "rows": [
+        {
+          "csaMm2": 25,
+          "ampacityA": 84
+        },
+        {
+          "csaMm2": 35,
+          "ampacityA": 105
+        },
+        {
+          "csaMm2": 50,
+          "ampacityA": 128
+        },
+        {
+          "csaMm2": 70,
+          "ampacityA": 166
+        },
+        {
+          "csaMm2": 95,
+          "ampacityA": 203
+        },
+        {
+          "csaMm2": 120,
+          "ampacityA": 237
+        },
+        {
+          "csaMm2": 150,
+          "ampacityA": 274
+        },
+        {
+          "csaMm2": 185,
+          "ampacityA": 315
+        },
+        {
+          "csaMm2": 240,
+          "ampacityA": 375
+        },
+        {
+          "csaMm2": 300,
+          "ampacityA": 434
+        }
+      ]
+    },
+    "G": {
+      "description": "Single-core cables in free air, spaced flat horizontal 1×De — Al/PVC 3L (IEC B.52.11 col. 7)",
+      "rows": [
+        {
+          "csaMm2": 25,
+          "ampacityA": 112
+        },
+        {
+          "csaMm2": 35,
+          "ampacityA": 139
+        },
+        {
+          "csaMm2": 50,
+          "ampacityA": 169
+        },
+        {
+          "csaMm2": 70,
+          "ampacityA": 217
+        },
+        {
+          "csaMm2": 95,
+          "ampacityA": 265
+        },
+        {
+          "csaMm2": 120,
+          "ampacityA": 308
+        },
+        {
+          "csaMm2": 150,
+          "ampacityA": 356
+        },
+        {
+          "csaMm2": 185,
+          "ampacityA": 407
+        },
+        {
+          "csaMm2": 240,
+          "ampacityA": 482
+        },
+        {
+          "csaMm2": 300,
+          "ampacityA": 557
+        }
+      ]
+    }
+  }
+}

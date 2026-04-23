@@ -1,0 +1,16 @@
+{
+  "id": "alpha_coefficients_v1",
+  "sourceRef": "IEC 60228 (conductors of insulated cables) + IEC 60287-1-1 §2 (electrical resistances). Linear temperature coefficient of resistance at 20 °C, applied in R(θ) = R(θ_ref) · [1 + α·(θ − 20)] / [1 + α·(θ_ref − 20)].",
+  "referenceTempC": 20,
+  "unit": "per_K",
+  "values": [
+    {
+      "conductorMaterial": "Cu",
+      "alphaPerK": 0.00393
+    },
+    {
+      "conductorMaterial": "Al",
+      "alphaPerK": 0.00403
+    }
+  ]
+}

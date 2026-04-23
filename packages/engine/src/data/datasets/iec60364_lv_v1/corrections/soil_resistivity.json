@@ -1,0 +1,31 @@
+{
+  "id": "corr_soil_resistivity_v1",
+  "baseSoilResistivityK_m_W": 2.5,
+  "sourceRef": "IEC 60364-5-52 Table B.52.16 / Schneider Guide Fig G14",
+  "tables": {
+    "buried_ducts": {
+      "description": "Cables in buried ducts",
+      "rows": [
+        { "soilResistivityK_m_W": 0.5, "factor": 1.28 },
+        { "soilResistivityK_m_W": 0.7, "factor": 1.20 },
+        { "soilResistivityK_m_W": 1.0, "factor": 1.18 },
+        { "soilResistivityK_m_W": 1.5, "factor": 1.10 },
+        { "soilResistivityK_m_W": 2.0, "factor": 1.05 },
+        { "soilResistivityK_m_W": 2.5, "factor": 1.00 },
+        { "soilResistivityK_m_W": 3.0, "factor": 0.96 }
+      ]
+    },
+    "direct_buried": {
+      "description": "Direct buried cables",
+      "rows": [
+        { "soilResistivityK_m_W": 0.5, "factor": 1.88 },
+        { "soilResistivityK_m_W": 0.7, "factor": 1.62 },
+        { "soilResistivityK_m_W": 1.0, "factor": 1.50 },
+        { "soilResistivityK_m_W": 1.5, "factor": 1.28 },
+        { "soilResistivityK_m_W": 2.0, "factor": 1.12 },
+        { "soilResistivityK_m_W": 2.5, "factor": 1.00 },
+        { "soilResistivityK_m_W": 3.0, "factor": 0.90 }
+      ]
+    }
+  }
+}

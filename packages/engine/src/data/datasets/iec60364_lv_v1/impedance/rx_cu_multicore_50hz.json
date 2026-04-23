@@ -1,0 +1,99 @@
+{
+  "id": "impedance_cu_multicore_50hz_v1",
+  "conductorMaterial": "Cu",
+  "cableType": "multicore",
+  "frequencyHz": 50,
+  "sourceRef": "IEC 60364 / Schneider Guide / Appendix 2 of reference calc document",
+  "resistance": {
+    "PVC": {
+      "temperatureBasisC": 70,
+      "unit": "ohm_per_km",
+      "rows": [
+        { "csaMm2": 1.5, "value": 14.9 },
+        { "csaMm2": 2.5, "value": 8.57 },
+        { "csaMm2": 4, "value": 5.33 },
+        { "csaMm2": 6, "value": 3.56 },
+        { "csaMm2": 10, "value": 2.12 },
+        { "csaMm2": 16, "value": 1.33 },
+        { "csaMm2": 25, "value": 0.842 },
+        { "csaMm2": 35, "value": 0.607 },
+        { "csaMm2": 50, "value": 0.449 },
+        { "csaMm2": 70, "value": 0.311 },
+        { "csaMm2": 95, "value": 0.225 },
+        { "csaMm2": 120, "value": 0.179 },
+        { "csaMm2": 150, "value": 0.146 },
+        { "csaMm2": 185, "value": 0.118 },
+        { "csaMm2": 240, "value": 0.0912 },
+        { "csaMm2": 300, "value": 0.0745 }
+      ]
+    },
+    "XLPE": {
+      "temperatureBasisC": 90,
+      "unit": "ohm_per_km",
+      "rows": [
+        { "csaMm2": 1.5, "value": 17.3 },
+        { "csaMm2": 2.5, "value": 9.45 },
+        { "csaMm2": 4, "value": 5.88 },
+        { "csaMm2": 6, "value": 3.93 },
+        { "csaMm2": 10, "value": 2.33 },
+        { "csaMm2": 16, "value": 1.47 },
+        { "csaMm2": 25, "value": 0.927 },
+        { "csaMm2": 35, "value": 0.669 },
+        { "csaMm2": 50, "value": 0.494 },
+        { "csaMm2": 70, "value": 0.343 },
+        { "csaMm2": 95, "value": 0.248 },
+        { "csaMm2": 120, "value": 0.197 },
+        { "csaMm2": 150, "value": 0.160 },
+        { "csaMm2": 185, "value": 0.129 },
+        { "csaMm2": 240, "value": 0.0998 },
+        { "csaMm2": 300, "value": 0.0812 }
+      ]
+    }
+  },
+  "reactance": {
+    "XLPE": {
+      "unit": "ohm_per_km",
+      "note": "Multicore circular conductors, XLPE insulation",
+      "rows": [
+        { "csaMm2": 1.5, "value": 0.107 },
+        { "csaMm2": 2.5, "value": 0.102 },
+        { "csaMm2": 4, "value": 0.0930 },
+        { "csaMm2": 6, "value": 0.0870 },
+        { "csaMm2": 10, "value": 0.0840 },
+        { "csaMm2": 16, "value": 0.0805 },
+        { "csaMm2": 25, "value": 0.0808 },
+        { "csaMm2": 35, "value": 0.0786 },
+        { "csaMm2": 50, "value": 0.0751 },
+        { "csaMm2": 70, "value": 0.0741 },
+        { "csaMm2": 95, "value": 0.0725 },
+        { "csaMm2": 120, "value": 0.0713 },
+        { "csaMm2": 150, "value": 0.0718 },
+        { "csaMm2": 185, "value": 0.0720 },
+        { "csaMm2": 240, "value": 0.0709 },
+        { "csaMm2": 300, "value": 0.0704 }
+      ]
+    },
+    "PVC": {
+      "unit": "ohm_per_km",
+      "note": "Multicore circular conductors, PVC insulation",
+      "rows": [
+        { "csaMm2": 1.5, "value": 0.111 },
+        { "csaMm2": 2.5, "value": 0.102 },
+        { "csaMm2": 4, "value": 0.102 },
+        { "csaMm2": 6, "value": 0.0967 },
+        { "csaMm2": 10, "value": 0.0906 },
+        { "csaMm2": 16, "value": 0.0861 },
+        { "csaMm2": 25, "value": 0.0853 },
+        { "csaMm2": 35, "value": 0.0826 },
+        { "csaMm2": 50, "value": 0.0797 },
+        { "csaMm2": 70, "value": 0.0770 },
+        { "csaMm2": 95, "value": 0.0766 },
+        { "csaMm2": 120, "value": 0.0743 },
+        { "csaMm2": 150, "value": 0.0745 },
+        { "csaMm2": 185, "value": 0.0744 },
+        { "csaMm2": 240, "value": 0.0735 },
+        { "csaMm2": 300, "value": 0.0732 }
+      ]
+    }
+  }
+}

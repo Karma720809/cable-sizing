@@ -1,0 +1,42 @@
+{
+  "id": "amp_cu_xlpe_singlecore_3loaded_50",
+  "conductorMaterial": "Cu",
+  "insulationType": "XLPE",
+  "loadedConductors": 3,
+  "cableType": "single-core",
+  "frequencyHz": 50,
+  "unit": "A",
+  "sourceRef": "IEC 60364-5-52:2009 Table B.52.12 (Cu / XLPE-EPR / single-core / 3-loaded). Method F = touching trefoil (column 5); Method G = spaced flat, horizontal, 1 × De (column 7). 90 °C conductor, 30 °C ambient.",
+  "tables": {
+    "F": {
+      "description": "Single-core cables in free air, touching trefoil — Cu/XLPE 3L (IEC B.52.12 col. 5)",
+      "rows": [
+        { "csaMm2": 25, "ampacityA": 135 },
+        { "csaMm2": 35, "ampacityA": 169 },
+        { "csaMm2": 50, "ampacityA": 207 },
+        { "csaMm2": 70, "ampacityA": 268 },
+        { "csaMm2": 95, "ampacityA": 328 },
+        { "csaMm2": 120, "ampacityA": 383 },
+        { "csaMm2": 150, "ampacityA": 444 },
+        { "csaMm2": 185, "ampacityA": 510 },
+        { "csaMm2": 240, "ampacityA": 607 },
+        { "csaMm2": 300, "ampacityA": 703 }
+      ]
+    },
+    "G": {
+      "description": "Single-core cables in free air, spaced flat horizontal 1×De — Cu/XLPE 3L (IEC B.52.12 col. 7)",
+      "rows": [
+        { "csaMm2": 25, "ampacityA": 182 },
+        { "csaMm2": 35, "ampacityA": 226 },
+        { "csaMm2": 50, "ampacityA": 275 },
+        { "csaMm2": 70, "ampacityA": 353 },
+        { "csaMm2": 95, "ampacityA": 430 },
+        { "csaMm2": 120, "ampacityA": 500 },
+        { "csaMm2": 150, "ampacityA": 577 },
+        { "csaMm2": 185, "ampacityA": 661 },
+        { "csaMm2": 240, "ampacityA": 781 },
+        { "csaMm2": 300, "ampacityA": 902 }
+      ]
+    }
+  }
+}

@@ -1,0 +1,564 @@
+{
+  "id": "amp_cu_xlpe_3loaded_multicore_60",
+  "conductorMaterial": "Cu",
+  "insulationType": "XLPE",
+  "loadedConductors": 3,
+  "cableType": "multicore",
+  "frequencyHz": 60,
+  "unit": "A",
+  "sourceRef": "IEC 60364-5-52:2009 Table B.52.4 (XLPE/EPR 3-loaded) / Schneider Guide Fig G24; Method E rows from TiSoft table_b_52_12 (IEC 60364-5-52 B.52.12) [5B-AMP: values replicated at 60 Hz under IEC 60364-5-52:2009 Annex B 50/60 Hz equivalence clause for LV conductor CSA ≤ 300 mm²]",
+  "tables": {
+    "A1": {
+      "description": "Insulated conductors in conduit in thermally insulated wall — XLPE",
+      "rows": [
+        {
+          "csaMm2": 1.5,
+          "ampacityA": 17
+        },
+        {
+          "csaMm2": 2.5,
+          "ampacityA": 23
+        },
+        {
+          "csaMm2": 4,
+          "ampacityA": 31
+        },
+        {
+          "csaMm2": 6,
+          "ampacityA": 40
+        },
+        {
+          "csaMm2": 10,
+          "ampacityA": 54
+        },
+        {
+          "csaMm2": 16,
+          "ampacityA": 73
+        },
+        {
+          "csaMm2": 25,
+          "ampacityA": 95
+        },
+        {
+          "csaMm2": 35,
+          "ampacityA": 117
+        },
+        {
+          "csaMm2": 50,
+          "ampacityA": 141
+        },
+        {
+          "csaMm2": 70,
+          "ampacityA": 179
+        },
+        {
+          "csaMm2": 95,
+          "ampacityA": 216
+        },
+        {
+          "csaMm2": 120,
+          "ampacityA": 249
+        },
+        {
+          "csaMm2": 150,
+          "ampacityA": 285
+        },
+        {
+          "csaMm2": 185,
+          "ampacityA": 324
+        },
+        {
+          "csaMm2": 240,
+          "ampacityA": 380
+        },
+        {
+          "csaMm2": 300,
+          "ampacityA": 435
+        }
+      ]
+    },
+    "A2": {
+      "description": "Multi-core cable in conduit in thermally insulated wall — XLPE",
+      "rows": [
+        {
+          "csaMm2": 1.5,
+          "ampacityA": 16.5
+        },
+        {
+          "csaMm2": 2.5,
+          "ampacityA": 22
+        },
+        {
+          "csaMm2": 4,
+          "ampacityA": 30
+        },
+        {
+          "csaMm2": 6,
+          "ampacityA": 38
+        },
+        {
+          "csaMm2": 10,
+          "ampacityA": 51
+        },
+        {
+          "csaMm2": 16,
+          "ampacityA": 68
+        },
+        {
+          "csaMm2": 25,
+          "ampacityA": 89
+        },
+        {
+          "csaMm2": 35,
+          "ampacityA": 109
+        },
+        {
+          "csaMm2": 50,
+          "ampacityA": 130
+        },
+        {
+          "csaMm2": 70,
+          "ampacityA": 164
+        },
+        {
+          "csaMm2": 95,
+          "ampacityA": 197
+        },
+        {
+          "csaMm2": 120,
+          "ampacityA": 227
+        },
+        {
+          "csaMm2": 150,
+          "ampacityA": 259
+        },
+        {
+          "csaMm2": 185,
+          "ampacityA": 295
+        },
+        {
+          "csaMm2": 240,
+          "ampacityA": 346
+        },
+        {
+          "csaMm2": 300,
+          "ampacityA": 396
+        }
+      ]
+    },
+    "B1": {
+      "description": "Insulated conductors in conduit on wall — XLPE",
+      "rows": [
+        {
+          "csaMm2": 1.5,
+          "ampacityA": 19.5
+        },
+        {
+          "csaMm2": 2.5,
+          "ampacityA": 27
+        },
+        {
+          "csaMm2": 4,
+          "ampacityA": 36
+        },
+        {
+          "csaMm2": 6,
+          "ampacityA": 46
+        },
+        {
+          "csaMm2": 10,
+          "ampacityA": 63
+        },
+        {
+          "csaMm2": 16,
+          "ampacityA": 85
+        },
+        {
+          "csaMm2": 25,
+          "ampacityA": 112
+        },
+        {
+          "csaMm2": 35,
+          "ampacityA": 138
+        },
+        {
+          "csaMm2": 50,
+          "ampacityA": 168
+        },
+        {
+          "csaMm2": 70,
+          "ampacityA": 213
+        },
+        {
+          "csaMm2": 95,
+          "ampacityA": 258
+        },
+        {
+          "csaMm2": 120,
+          "ampacityA": 299
+        },
+        {
+          "csaMm2": 150,
+          "ampacityA": 344
+        },
+        {
+          "csaMm2": 185,
+          "ampacityA": 392
+        },
+        {
+          "csaMm2": 240,
+          "ampacityA": 461
+        },
+        {
+          "csaMm2": 300,
+          "ampacityA": 530
+        }
+      ]
+    },
+    "B2": {
+      "description": "Multi-core cable in conduit on wall — XLPE",
+      "rows": [
+        {
+          "csaMm2": 1.5,
+          "ampacityA": 19
+        },
+        {
+          "csaMm2": 2.5,
+          "ampacityA": 26
+        },
+        {
+          "csaMm2": 4,
+          "ampacityA": 35
+        },
+        {
+          "csaMm2": 6,
+          "ampacityA": 44
+        },
+        {
+          "csaMm2": 10,
+          "ampacityA": 60
+        },
+        {
+          "csaMm2": 16,
+          "ampacityA": 80
+        },
+        {
+          "csaMm2": 25,
+          "ampacityA": 105
+        },
+        {
+          "csaMm2": 35,
+          "ampacityA": 128
+        },
+        {
+          "csaMm2": 50,
+          "ampacityA": 154
+        },
+        {
+          "csaMm2": 70,
+          "ampacityA": 194
+        },
+        {
+          "csaMm2": 95,
+          "ampacityA": 233
+        },
+        {
+          "csaMm2": 120,
+          "ampacityA": 268
+        },
+        {
+          "csaMm2": 150,
+          "ampacityA": 300
+        },
+        {
+          "csaMm2": 185,
+          "ampacityA": 340
+        },
+        {
+          "csaMm2": 240,
+          "ampacityA": 398
+        },
+        {
+          "csaMm2": 300,
+          "ampacityA": 455
+        }
+      ]
+    },
+    "C": {
+      "description": "Single/multi-core cable clipped direct or on unperforated tray — XLPE",
+      "rows": [
+        {
+          "csaMm2": 1.5,
+          "ampacityA": 22
+        },
+        {
+          "csaMm2": 2.5,
+          "ampacityA": 30
+        },
+        {
+          "csaMm2": 4,
+          "ampacityA": 40
+        },
+        {
+          "csaMm2": 6,
+          "ampacityA": 51
+        },
+        {
+          "csaMm2": 10,
+          "ampacityA": 70
+        },
+        {
+          "csaMm2": 16,
+          "ampacityA": 94
+        },
+        {
+          "csaMm2": 25,
+          "ampacityA": 119
+        },
+        {
+          "csaMm2": 35,
+          "ampacityA": 148
+        },
+        {
+          "csaMm2": 50,
+          "ampacityA": 180
+        },
+        {
+          "csaMm2": 70,
+          "ampacityA": 232
+        },
+        {
+          "csaMm2": 95,
+          "ampacityA": 282
+        },
+        {
+          "csaMm2": 120,
+          "ampacityA": 328
+        },
+        {
+          "csaMm2": 150,
+          "ampacityA": 379
+        },
+        {
+          "csaMm2": 185,
+          "ampacityA": 434
+        },
+        {
+          "csaMm2": 240,
+          "ampacityA": 514
+        },
+        {
+          "csaMm2": 300,
+          "ampacityA": 593
+        }
+      ]
+    },
+    "E": {
+      "description": "Multi-core cable in free air — Cu/XLPE 3L (IEC 60364-5-52 B.52.12)",
+      "rows": [
+        {
+          "csaMm2": 1.5,
+          "ampacityA": 23
+        },
+        {
+          "csaMm2": 2.5,
+          "ampacityA": 32
+        },
+        {
+          "csaMm2": 4,
+          "ampacityA": 42
+        },
+        {
+          "csaMm2": 6,
+          "ampacityA": 54
+        },
+        {
+          "csaMm2": 10,
+          "ampacityA": 75
+        },
+        {
+          "csaMm2": 16,
+          "ampacityA": 100
+        },
+        {
+          "csaMm2": 25,
+          "ampacityA": 127
+        },
+        {
+          "csaMm2": 35,
+          "ampacityA": 158
+        },
+        {
+          "csaMm2": 50,
+          "ampacityA": 192
+        },
+        {
+          "csaMm2": 70,
+          "ampacityA": 246
+        },
+        {
+          "csaMm2": 95,
+          "ampacityA": 298
+        },
+        {
+          "csaMm2": 120,
+          "ampacityA": 346
+        },
+        {
+          "csaMm2": 150,
+          "ampacityA": 399
+        },
+        {
+          "csaMm2": 185,
+          "ampacityA": 456
+        },
+        {
+          "csaMm2": 240,
+          "ampacityA": 538
+        },
+        {
+          "csaMm2": 300,
+          "ampacityA": 621
+        }
+      ]
+    },
+    "D1": {
+      "description": "Multi-core cable in conduit in ground — XLPE",
+      "rows": [
+        {
+          "csaMm2": 1.5,
+          "ampacityA": 22
+        },
+        {
+          "csaMm2": 2.5,
+          "ampacityA": 29
+        },
+        {
+          "csaMm2": 4,
+          "ampacityA": 37
+        },
+        {
+          "csaMm2": 6,
+          "ampacityA": 46
+        },
+        {
+          "csaMm2": 10,
+          "ampacityA": 60
+        },
+        {
+          "csaMm2": 16,
+          "ampacityA": 78
+        },
+        {
+          "csaMm2": 25,
+          "ampacityA": 99
+        },
+        {
+          "csaMm2": 35,
+          "ampacityA": 119
+        },
+        {
+          "csaMm2": 50,
+          "ampacityA": 140
+        },
+        {
+          "csaMm2": 70,
+          "ampacityA": 173
+        },
+        {
+          "csaMm2": 95,
+          "ampacityA": 204
+        },
+        {
+          "csaMm2": 120,
+          "ampacityA": 231
+        },
+        {
+          "csaMm2": 150,
+          "ampacityA": 261
+        },
+        {
+          "csaMm2": 185,
+          "ampacityA": 292
+        },
+        {
+          "csaMm2": 240,
+          "ampacityA": 336
+        },
+        {
+          "csaMm2": 300,
+          "ampacityA": 379
+        }
+      ]
+    },
+    "D2": {
+      "description": "Single-core cable in conduit in ground — XLPE",
+      "rows": [
+        {
+          "csaMm2": 1.5,
+          "ampacityA": 22
+        },
+        {
+          "csaMm2": 2.5,
+          "ampacityA": 29
+        },
+        {
+          "csaMm2": 4,
+          "ampacityA": 38
+        },
+        {
+          "csaMm2": 6,
+          "ampacityA": 47
+        },
+        {
+          "csaMm2": 10,
+          "ampacityA": 63
+        },
+        {
+          "csaMm2": 16,
+          "ampacityA": 81
+        },
+        {
+          "csaMm2": 25,
+          "ampacityA": 104
+        },
+        {
+          "csaMm2": 35,
+          "ampacityA": 125
+        },
+        {
+          "csaMm2": 50,
+          "ampacityA": 148
+        },
+        {
+          "csaMm2": 70,
+          "ampacityA": 183
+        },
+        {
+          "csaMm2": 95,
+          "ampacityA": 216
+        },
+        {
+          "csaMm2": 120,
+          "ampacityA": 246
+        },
+        {
+          "csaMm2": 150,
+          "ampacityA": 278
+        },
+        {
+          "csaMm2": 185,
+          "ampacityA": 312
+        },
+        {
+          "csaMm2": 240,
+          "ampacityA": 361
+        },
+        {
+          "csaMm2": 300,
+          "ampacityA": 408
+        }
+      ]
+    }
+  }
+}

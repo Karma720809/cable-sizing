@@ -1,0 +1,34 @@
+{
+  "id": "short_circuit_k_v1",
+  "sourceRef": "IEC 60364-5-54 Annex A",
+  "values": [
+    {
+      "conductorMaterial": "Cu",
+      "insulationType": "PVC",
+      "kValue": 115,
+      "initialTempC": 70,
+      "finalTempC": 160
+    },
+    {
+      "conductorMaterial": "Cu",
+      "insulationType": "XLPE",
+      "kValue": 143,
+      "initialTempC": 90,
+      "finalTempC": 250
+    },
+    {
+      "conductorMaterial": "Al",
+      "insulationType": "PVC",
+      "kValue": 76,
+      "initialTempC": 70,
+      "finalTempC": 160
+    },
+    {
+      "conductorMaterial": "Al",
+      "insulationType": "XLPE",
+      "kValue": 94,
+      "initialTempC": 90,
+      "finalTempC": 250
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build -w @cable-sizing/engine && npm run build -w @cable-sizing/host-web",
+  "installCommand": "npm install",
+  "outputDirectory": "packages/host-web/dist",
+  "framework": null
+}

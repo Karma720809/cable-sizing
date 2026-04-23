@@ -1,0 +1,211 @@
+{
+  "id": "impedance_al_multicore_60hz_v1",
+  "conductorMaterial": "Al",
+  "cableType": "multicore",
+  "frequencyHz": 60,
+  "sourceRef": "IEC 60228 / Schneider Guide. R_Al ≈ R_Cu × (σCu/σAl ≈ 1.64). X ≈ Cu values (geometry-dominated). [5B-IMP: R replicated from the 50 Hz sibling under IEC 60364-5-52:2009 Annex B 50/60 Hz equivalence for LV CSA ≤ 300 mm²; X derived as X60 = 1.2 · X50 from the frequency-proportional relation X = 2πfL with fixed cable geometry.]",
+  "resistance": {
+    "PVC": {
+      "temperatureBasisC": 70,
+      "unit": "ohm_per_km",
+      "rows": [
+        {
+          "csaMm2": 16,
+          "value": 2.16
+        },
+        {
+          "csaMm2": 25,
+          "value": 1.38
+        },
+        {
+          "csaMm2": 35,
+          "value": 0.988
+        },
+        {
+          "csaMm2": 50,
+          "value": 0.719
+        },
+        {
+          "csaMm2": 70,
+          "value": 0.499
+        },
+        {
+          "csaMm2": 95,
+          "value": 0.363
+        },
+        {
+          "csaMm2": 120,
+          "value": 0.288
+        },
+        {
+          "csaMm2": 150,
+          "value": 0.235
+        },
+        {
+          "csaMm2": 185,
+          "value": 0.19
+        },
+        {
+          "csaMm2": 240,
+          "value": 0.148
+        },
+        {
+          "csaMm2": 300,
+          "value": 0.123
+        }
+      ]
+    },
+    "XLPE": {
+      "temperatureBasisC": 90,
+      "unit": "ohm_per_km",
+      "rows": [
+        {
+          "csaMm2": 16,
+          "value": 2.39
+        },
+        {
+          "csaMm2": 25,
+          "value": 1.52
+        },
+        {
+          "csaMm2": 35,
+          "value": 1.09
+        },
+        {
+          "csaMm2": 50,
+          "value": 0.791
+        },
+        {
+          "csaMm2": 70,
+          "value": 0.549
+        },
+        {
+          "csaMm2": 95,
+          "value": 0.399
+        },
+        {
+          "csaMm2": 120,
+          "value": 0.317
+        },
+        {
+          "csaMm2": 150,
+          "value": 0.259
+        },
+        {
+          "csaMm2": 185,
+          "value": 0.209
+        },
+        {
+          "csaMm2": 240,
+          "value": 0.162
+        },
+        {
+          "csaMm2": 300,
+          "value": 0.135
+        }
+      ]
+    }
+  },
+  "reactance": {
+    "PVC": {
+      "unit": "ohm_per_km",
+      "note": "Al multicore, circular conductors, PVC insulation (X × 1.2 for 60 Hz)",
+      "rows": [
+        {
+          "csaMm2": 16,
+          "value": 0.1033
+        },
+        {
+          "csaMm2": 25,
+          "value": 0.1024
+        },
+        {
+          "csaMm2": 35,
+          "value": 0.09912
+        },
+        {
+          "csaMm2": 50,
+          "value": 0.09564
+        },
+        {
+          "csaMm2": 70,
+          "value": 0.0924
+        },
+        {
+          "csaMm2": 95,
+          "value": 0.09192
+        },
+        {
+          "csaMm2": 120,
+          "value": 0.08916
+        },
+        {
+          "csaMm2": 150,
+          "value": 0.0894
+        },
+        {
+          "csaMm2": 185,
+          "value": 0.08928
+        },
+        {
+          "csaMm2": 240,
+          "value": 0.0882
+        },
+        {
+          "csaMm2": 300,
+          "value": 0.08784
+        }
+      ]
+    },
+    "XLPE": {
+      "unit": "ohm_per_km",
+      "note": "Al multicore, circular conductors, XLPE insulation (X × 1.2 for 60 Hz)",
+      "rows": [
+        {
+          "csaMm2": 16,
+          "value": 0.0966
+        },
+        {
+          "csaMm2": 25,
+          "value": 0.09696
+        },
+        {
+          "csaMm2": 35,
+          "value": 0.09432
+        },
+        {
+          "csaMm2": 50,
+          "value": 0.09012
+        },
+        {
+          "csaMm2": 70,
+          "value": 0.08892
+        },
+        {
+          "csaMm2": 95,
+          "value": 0.087
+        },
+        {
+          "csaMm2": 120,
+          "value": 0.08556
+        },
+        {
+          "csaMm2": 150,
+          "value": 0.08616
+        },
+        {
+          "csaMm2": 185,
+          "value": 0.0864
+        },
+        {
+          "csaMm2": 240,
+          "value": 0.08508
+        },
+        {
+          "csaMm2": 300,
+          "value": 0.08448
+        }
+      ]
+    }
+  }
+}

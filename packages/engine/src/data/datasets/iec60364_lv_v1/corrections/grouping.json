@@ -1,0 +1,68 @@
+{
+  "id": "corr_grouping_v1",
+  "sourceRef": "IEC 60364-5-52 Table B.52.17 / Schneider Guide Fig G16",
+  "tables": {
+    "bunched_air": {
+      "description": "Bunched in air, on surface, embedded or enclosed (Methods A to F)",
+      "rows": [
+        { "groupCount": 1, "factor": 1.00 },
+        { "groupCount": 2, "factor": 0.80 },
+        { "groupCount": 3, "factor": 0.70 },
+        { "groupCount": 4, "factor": 0.65 },
+        { "groupCount": 5, "factor": 0.60 },
+        { "groupCount": 6, "factor": 0.57 },
+        { "groupCount": 7, "factor": 0.54 },
+        { "groupCount": 8, "factor": 0.52 },
+        { "groupCount": 9, "factor": 0.50 },
+        { "groupCount": 12, "factor": 0.45 },
+        { "groupCount": 16, "factor": 0.41 },
+        { "groupCount": 20, "factor": 0.38 }
+      ]
+    },
+    "single_layer_wall": {
+      "description": "Single layer on wall, floor or unperforated tray (Method C)",
+      "rows": [
+        { "groupCount": 1, "factor": 1.00 },
+        { "groupCount": 2, "factor": 0.85 },
+        { "groupCount": 3, "factor": 0.79 },
+        { "groupCount": 4, "factor": 0.75 },
+        { "groupCount": 5, "factor": 0.73 },
+        { "groupCount": 6, "factor": 0.72 },
+        { "groupCount": 7, "factor": 0.72 },
+        { "groupCount": 8, "factor": 0.71 },
+        { "groupCount": 9, "factor": 0.70 }
+      ]
+    },
+    "single_layer_perforated_tray": {
+      "description": "Single layer on perforated tray (Methods E and F)",
+      "rows": [
+        { "groupCount": 1, "factor": 1.00 },
+        { "groupCount": 2, "factor": 0.88 },
+        { "groupCount": 3, "factor": 0.82 },
+        { "groupCount": 4, "factor": 0.77 },
+        { "groupCount": 5, "factor": 0.75 },
+        { "groupCount": 6, "factor": 0.73 },
+        { "groupCount": 7, "factor": 0.73 },
+        { "groupCount": 8, "factor": 0.72 },
+        { "groupCount": 9, "factor": 0.72 }
+      ]
+    },
+    "buried_touching": {
+      "description": "Cables buried in ground, touching (Method D)",
+      "rows": [
+        { "groupCount": 1, "factor": 1.00 },
+        { "groupCount": 2, "factor": 0.75 },
+        { "groupCount": 3, "factor": 0.65 },
+        { "groupCount": 4, "factor": 0.60 },
+        { "groupCount": 5, "factor": 0.55 },
+        { "groupCount": 6, "factor": 0.50 },
+        { "groupCount": 7, "factor": 0.45 },
+        { "groupCount": 8, "factor": 0.43 },
+        { "groupCount": 9, "factor": 0.41 },
+        { "groupCount": 12, "factor": 0.36 },
+        { "groupCount": 16, "factor": 0.32 },
+        { "groupCount": 20, "factor": 0.29 }
+      ]
+    }
+  }
+}

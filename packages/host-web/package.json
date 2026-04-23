@@ -1,0 +1,31 @@
+{
+  "name": "@cable-sizing/host-web",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Single-circuit cable sizing calculator UI (App-MVP-1) consuming the frozen @cable-sizing/engine worker contract.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -p tsconfig.json && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@cable-sizing/engine": "*",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.4.8",
+    "@testing-library/react": "^16.0.0",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "jsdom": "^24.1.1",
+    "typescript": "^5.4.5",
+    "vite": "^5.3.3",
+    "vitest": "^1.6.0"
+  }
+}
