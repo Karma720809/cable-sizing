@@ -14,12 +14,57 @@
  * time — that's the engine's job.
  */
 import React from 'react';
-import { DEFAULT_INPUT } from '../state/defaultInput.js';
+import { DEFAULT_INPUT, DEFAULT_MV_INPUT } from '../state/defaultInput.js';
 
 // ─── FormState ─────────────────────────────────────────────────────────
 
+export type VoltageClass = 'LV' | 'MV';
+
 export interface FormState {
-  // Load
+  // Voltage class — switches the form between LV (IEC 60364-5-52) and
+  // 22.9kV MV (KEPCO ES 6145). MV-specific fields are stored alongside LV
+  // fields so the user can toggle without losing input.
+  voltageClass: VoltageClass;
+
+  // ── MV-specific (22.9kV CNCV-W) ────────────────────────────────
+  mvLoadType: 'general' | 'motor' | 'transformer';
+  mvApparentPowerMVA: number;
+  mvPowerKW: number;
+  mvPowerFactor: number;
+  mvEfficiency: number;
+  mvDemandFactor: number;
+  mvUseDesignCurrentOverride: boolean;
+  mvDesignCurrentOverrideA: number;
+
+  mvCableType: 'CNCV-W' | 'TR-CNCV-W' | 'FR-CNCO-W';
+  mvUseScreenOverride: boolean;
+  mvScreenCsaMm2: number;
+  mvUseCapacitanceOverride: boolean;
+  mvCapacitanceUFPerKm: number;
+
+  mvInstallationMethod: 'direct_buried' | 'duct_bank' | 'trough' | 'tunnel';
+  mvFormation: 'trefoil' | 'flat_touching' | 'flat_spaced';
+  mvFlatSpacingMm: number;
+  mvSoilResistivityK_m_W: number;
+  mvBurialDepthM: number;
+  mvGroupCount: number;
+  mvAmbientTempC: number;
+
+  mvProtectionDevice: 'VCB' | 'Fuse' | 'Recloser';
+  mvRatedCurrentA: number;
+  mvBreakingKA: number;
+  mvTripTimeS: number;
+  mvShortCircuitKA: number;
+  mvUseEarthFault: boolean;
+  mvEarthFaultKA: number;
+  mvEarthFaultTimeS: number;
+
+  mvLengthM: number;
+  mvMaxVoltageDropPercent: number;
+  mvVerifyScreen: boolean;
+  mvChargingCurrentThreshold: number;
+
+  // Load (LV)
   loadType: 'general' | 'motor' | 'heater' | 'lighting';
   powerKW: number;
   powerFactor: number;
@@ -64,6 +109,46 @@ export interface FormState {
 }
 
 export const INITIAL_FORM: FormState = {
+  voltageClass: 'LV',
+
+  // MV defaults — TC-01 baseline
+  mvLoadType: DEFAULT_MV_INPUT.load.type,
+  mvApparentPowerMVA: DEFAULT_MV_INPUT.load.apparentPowerMVA ?? 1.0,
+  mvPowerKW: 750,
+  mvPowerFactor: 0.85,
+  mvEfficiency: 0.9,
+  mvDemandFactor: 1.0,
+  mvUseDesignCurrentOverride: false,
+  mvDesignCurrentOverrideA: 0,
+
+  mvCableType: DEFAULT_MV_INPUT.cable.cableType,
+  mvUseScreenOverride: false,
+  mvScreenCsaMm2: 35,
+  mvUseCapacitanceOverride: false,
+  mvCapacitanceUFPerKm: 0.3,
+
+  mvInstallationMethod: DEFAULT_MV_INPUT.installation.method,
+  mvFormation: DEFAULT_MV_INPUT.installation.formation,
+  mvFlatSpacingMm: 100,
+  mvSoilResistivityK_m_W: DEFAULT_MV_INPUT.installation.soilResistivityK_m_W,
+  mvBurialDepthM: DEFAULT_MV_INPUT.installation.burialDepthM,
+  mvGroupCount: DEFAULT_MV_INPUT.installation.groupCount,
+  mvAmbientTempC: DEFAULT_MV_INPUT.installation.ambientTempC,
+
+  mvProtectionDevice: DEFAULT_MV_INPUT.protection.deviceType,
+  mvRatedCurrentA: DEFAULT_MV_INPUT.protection.ratedCurrentA,
+  mvBreakingKA: DEFAULT_MV_INPUT.protection.breakingKA,
+  mvTripTimeS: DEFAULT_MV_INPUT.protection.tripTimeS,
+  mvShortCircuitKA: DEFAULT_MV_INPUT.protection.shortCircuitKA,
+  mvUseEarthFault: false,
+  mvEarthFaultKA: 5,
+  mvEarthFaultTimeS: 0.5,
+
+  mvLengthM: DEFAULT_MV_INPUT.route.lengthM,
+  mvMaxVoltageDropPercent: DEFAULT_MV_INPUT.projectPolicy.maxVoltageDropPercent,
+  mvVerifyScreen: DEFAULT_MV_INPUT.projectPolicy.verifyScreen,
+  mvChargingCurrentThreshold: DEFAULT_MV_INPUT.projectPolicy.chargingCurrentThreshold,
+
   loadType: DEFAULT_INPUT.load.type,
   powerKW: DEFAULT_INPUT.load.powerKW,
   powerFactor: DEFAULT_INPUT.load.powerFactor,
@@ -100,6 +185,59 @@ export const INITIAL_FORM: FormState = {
   ignoreReactanceBelowMm2: 16,
   resistanceModel: DEFAULT_INPUT.projectPolicy.resistanceModel,
 };
+
+// ─── Form → MvCircuitInput ─────────────────────────────────────────────
+
+/** Assemble a raw MvCircuitInput from the form state. */
+export function buildMvCircuitInput(f: FormState): unknown {
+  const mvLoadOverride = f.mvUseDesignCurrentOverride
+    ? { designCurrentOverrideA: f.mvDesignCurrentOverrideA }
+    : {};
+
+  const isTransformer = f.mvLoadType === 'transformer';
+
+  return {
+    load: {
+      type: f.mvLoadType,
+      powerKW: isTransformer ? null : f.mvPowerKW,
+      apparentPowerMVA: isTransformer ? f.mvApparentPowerMVA : null,
+      powerFactor: isTransformer ? null : f.mvPowerFactor,
+      efficiency: isTransformer ? null : f.mvEfficiency,
+      demandFactor: isTransformer ? null : f.mvDemandFactor,
+      ...mvLoadOverride,
+    },
+    system: { voltageV: 22900, lineToGroundV: 13200, phase: 3, frequencyHz: 60 },
+    cable: {
+      cableType: f.mvCableType,
+      screenCsaMm2: f.mvUseScreenOverride ? f.mvScreenCsaMm2 : null,
+      capacitanceUFPerKm: f.mvUseCapacitanceOverride ? f.mvCapacitanceUFPerKm : null,
+    },
+    installation: {
+      method: f.mvInstallationMethod,
+      formation: f.mvFormation,
+      flatSpacingMm: f.mvFormation === 'flat_spaced' ? f.mvFlatSpacingMm : null,
+      soilResistivityK_m_W: f.mvSoilResistivityK_m_W,
+      burialDepthM: f.mvBurialDepthM,
+      groupCount: f.mvGroupCount,
+      ambientTempC: f.mvAmbientTempC,
+    },
+    protection: {
+      deviceType: f.mvProtectionDevice,
+      ratedCurrentA: f.mvRatedCurrentA,
+      breakingKA: f.mvBreakingKA,
+      tripTimeS: f.mvTripTimeS,
+      shortCircuitKA: f.mvShortCircuitKA,
+      earthFaultKA: f.mvUseEarthFault ? f.mvEarthFaultKA : null,
+      earthFaultTimeS: f.mvUseEarthFault ? f.mvEarthFaultTimeS : null,
+    },
+    route: { lengthM: f.mvLengthM },
+    projectPolicy: {
+      maxVoltageDropPercent: f.mvMaxVoltageDropPercent,
+      verifyScreen: f.mvVerifyScreen,
+      chargingCurrentThreshold: f.mvChargingCurrentThreshold,
+    },
+  };
+}
 
 // ─── Form → CircuitInput ───────────────────────────────────────────────
 
@@ -189,6 +327,41 @@ export function CircuitForm({ value, onChange, onSubmit, busy }: Props): React.R
         onSubmit();
       }}
     >
+      {/* ─ Voltage class selector (top-level) ─ */}
+      <fieldset>
+        <legend>Voltage class</legend>
+        <SelectField
+          label="System"
+          v={value.voltageClass}
+          options={[
+            ['LV', 'LV — IEC 60364-5-52 (≤ 1 kV)'],
+            ['MV', 'MV — 22.9 kV CNCV-W (KEPCO ES 6145)'],
+          ]}
+          set={(s) => set('voltageClass', s as VoltageClass)}
+        />
+      </fieldset>
+
+      {value.voltageClass === 'MV' ? (
+        <MvFields value={value} set={set} />
+      ) : (
+        <LvFields value={value} set={set} methodRequiresSoil={methodRequiresSoil} />
+      )}
+
+      <button type="submit" disabled={busy}>
+        {busy ? 'Sizing…' : 'Size cable'}
+      </button>
+    </form>
+  );
+}
+
+interface SubFormProps {
+  value: FormState;
+  set: <K extends keyof FormState>(k: K, v: FormState[K]) => void;
+}
+
+function LvFields({ value, set, methodRequiresSoil }: SubFormProps & { methodRequiresSoil: boolean }): React.ReactElement {
+  return (
+    <>
       {/* ─ Load ─ */}
       <fieldset>
         <legend>Load</legend>
@@ -441,11 +614,165 @@ export function CircuitForm({ value, onChange, onSubmit, busy }: Props): React.R
           />
         </AdvancedGroup>
       </fieldset>
+    </>
+  );
+}
 
-      <button type="submit" disabled={busy}>
-        {busy ? 'Sizing…' : 'Size cable'}
-      </button>
-    </form>
+function MvFields({ value, set }: SubFormProps): React.ReactElement {
+  const isTransformer = value.mvLoadType === 'transformer';
+  const isFlatSpaced = value.mvFormation === 'flat_spaced';
+  const isBuried = value.mvInstallationMethod === 'direct_buried';
+
+  return (
+    <>
+      {/* ─ MV Load ─ */}
+      <fieldset>
+        <legend>Load</legend>
+        <SelectField
+          label="Load type"
+          v={value.mvLoadType}
+          options={[
+            ['transformer', 'Transformer (S in MVA)'],
+            ['general', 'General'],
+            ['motor', 'Motor'],
+          ]}
+          set={(s) => set('mvLoadType', s as FormState['mvLoadType'])}
+        />
+        {isTransformer ? (
+          <NumField label="Apparent power (MVA)" v={value.mvApparentPowerMVA} step={0.1} set={(n) => set('mvApparentPowerMVA', n)} />
+        ) : (
+          <>
+            <NumField label="Power (kW)" v={value.mvPowerKW} set={(n) => set('mvPowerKW', n)} />
+            <NumField label="Power factor" v={value.mvPowerFactor} step={0.01} set={(n) => set('mvPowerFactor', n)} />
+            <AdvancedGroup>
+              <NumField label="Efficiency (η)" v={value.mvEfficiency} step={0.01} set={(n) => set('mvEfficiency', n)} />
+              <NumField label="Demand factor" v={value.mvDemandFactor} step={0.05} set={(n) => set('mvDemandFactor', n)} />
+            </AdvancedGroup>
+          </>
+        )}
+        <AdvancedGroup>
+          <CheckField label="Override design current (IB)" v={value.mvUseDesignCurrentOverride} set={(b) => set('mvUseDesignCurrentOverride', b)} />
+          {value.mvUseDesignCurrentOverride && (
+            <NumField label="IB override (A)" v={value.mvDesignCurrentOverrideA} set={(n) => set('mvDesignCurrentOverrideA', n)} />
+          )}
+        </AdvancedGroup>
+      </fieldset>
+
+      {/* ─ MV System (read-only summary) ─ */}
+      <fieldset>
+        <legend>System (fixed)</legend>
+        <div className="muted">22.9 kV-Y, 60 Hz, 3-phase, Cu/XLPE single-core.</div>
+      </fieldset>
+
+      {/* ─ MV Cable ─ */}
+      <fieldset>
+        <legend>Cable</legend>
+        <SelectField
+          label="Cable type"
+          v={value.mvCableType}
+          options={[
+            ['CNCV-W', 'CNCV-W (water-blocked)'],
+            ['TR-CNCV-W', 'TR-CNCV-W (tracking-resistant)'],
+            ['FR-CNCO-W', 'FR-CNCO-W (flame-retardant, trough)'],
+          ]}
+          set={(s) => set('mvCableType', s as FormState['mvCableType'])}
+        />
+        <AdvancedGroup>
+          <CheckField label="Override screen CSA" v={value.mvUseScreenOverride} set={(b) => set('mvUseScreenOverride', b)} />
+          {value.mvUseScreenOverride && (
+            <NumField label="Screen CSA (mm²)" v={value.mvScreenCsaMm2} set={(n) => set('mvScreenCsaMm2', n)} />
+          )}
+          <CheckField label="Override capacitance" v={value.mvUseCapacitanceOverride} set={(b) => set('mvUseCapacitanceOverride', b)} />
+          {value.mvUseCapacitanceOverride && (
+            <NumField label="C (μF/km)" v={value.mvCapacitanceUFPerKm} step={0.01} set={(n) => set('mvCapacitanceUFPerKm', n)} />
+          )}
+        </AdvancedGroup>
+      </fieldset>
+
+      {/* ─ MV Installation ─ */}
+      <fieldset>
+        <legend>Installation</legend>
+        <SelectField
+          label="Method"
+          v={value.mvInstallationMethod}
+          options={[
+            ['direct_buried', 'Direct buried (직매설)'],
+            ['duct_bank', 'Duct bank (관로)'],
+            ['trough', 'Trough (전력구)'],
+            ['tunnel', 'Tunnel (공동구)'],
+          ]}
+          set={(s) => set('mvInstallationMethod', s as FormState['mvInstallationMethod'])}
+        />
+        <SelectField
+          label="Formation"
+          v={value.mvFormation}
+          options={[
+            ['trefoil', 'Trefoil'],
+            ['flat_touching', 'Flat (touching)'],
+            ['flat_spaced', 'Flat (spaced)'],
+          ]}
+          set={(s) => set('mvFormation', s as FormState['mvFormation'])}
+        />
+        {isFlatSpaced && (
+          <NumField label="Spacing (mm)" v={value.mvFlatSpacingMm} step={10} set={(n) => set('mvFlatSpacingMm', n)} />
+        )}
+        <NumField label="Ground temp (°C)" v={value.mvAmbientTempC} set={(n) => set('mvAmbientTempC', n)} />
+        <NumField label="Soil ρ (K·m/W)" v={value.mvSoilResistivityK_m_W} step={0.1} set={(n) => set('mvSoilResistivityK_m_W', n)} />
+        {isBuried && (
+          <NumField label="Burial depth (m)" v={value.mvBurialDepthM} step={0.1} set={(n) => set('mvBurialDepthM', n)} />
+        )}
+        <NumField label="Group count" v={value.mvGroupCount} step={1} set={(n) => set('mvGroupCount', Math.max(1, Math.round(n)))} />
+      </fieldset>
+
+      {/* ─ MV Route ─ */}
+      <fieldset>
+        <legend>Route</legend>
+        <NumField label="Length, one-way (m)" v={value.mvLengthM} set={(n) => set('mvLengthM', n)} />
+      </fieldset>
+
+      {/* ─ MV Protection ─ */}
+      <fieldset>
+        <legend>Protection</legend>
+        <SelectField
+          label="Device"
+          v={value.mvProtectionDevice}
+          options={[
+            ['VCB', 'VCB'],
+            ['Fuse', 'Fuse'],
+            ['Recloser', 'Recloser'],
+          ]}
+          set={(s) => set('mvProtectionDevice', s as FormState['mvProtectionDevice'])}
+        />
+        <NumField label="Rated In (A)" v={value.mvRatedCurrentA} set={(n) => set('mvRatedCurrentA', n)} />
+        <NumField label="Breaking (kA)" v={value.mvBreakingKA} step={0.5} set={(n) => set('mvBreakingKA', n)} />
+        <NumField label="Isc (kA)" v={value.mvShortCircuitKA} step={0.1} set={(n) => set('mvShortCircuitKA', n)} />
+        <NumField label="Trip time (s)" v={value.mvTripTimeS} step={0.01} set={(n) => set('mvTripTimeS', n)} />
+        <AdvancedGroup>
+          <CheckField label="Verify screen against earth fault" v={value.mvUseEarthFault} set={(b) => set('mvUseEarthFault', b)} />
+          {value.mvUseEarthFault && (
+            <>
+              <NumField label="Earth fault Ie (kA)" v={value.mvEarthFaultKA} step={0.1} set={(n) => set('mvEarthFaultKA', n)} />
+              <NumField label="Earth fault t (s)" v={value.mvEarthFaultTimeS} step={0.01} set={(n) => set('mvEarthFaultTimeS', n)} />
+            </>
+          )}
+        </AdvancedGroup>
+      </fieldset>
+
+      {/* ─ MV Policy ─ */}
+      <fieldset>
+        <legend>Project policy</legend>
+        <NumField label="Max ΔU (%)" v={value.mvMaxVoltageDropPercent} step={0.1} set={(n) => set('mvMaxVoltageDropPercent', n)} />
+        <CheckField label="Verify screen" v={value.mvVerifyScreen} set={(b) => set('mvVerifyScreen', b)} />
+        <AdvancedGroup>
+          <NumField
+            label="Charging current threshold (Ic/IB)"
+            v={value.mvChargingCurrentThreshold}
+            step={0.005}
+            set={(n) => set('mvChargingCurrentThreshold', Math.max(0, n))}
+          />
+        </AdvancedGroup>
+      </fieldset>
+    </>
   );
 }
 

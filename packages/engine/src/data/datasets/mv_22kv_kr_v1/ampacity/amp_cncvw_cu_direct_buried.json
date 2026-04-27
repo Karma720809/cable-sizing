@@ -1,0 +1,59 @@
+{
+  "id": "amp_cncvw_cu_direct_buried",
+  "datasetId": "mv_22kv_kr_v1",
+  "cableType": "CNCV-W",
+  "conductorMaterial": "Cu",
+  "insulationType": "XLPE",
+  "voltageGrade": "12.7/22",
+  "installationMethod": "direct_buried",
+  "frequencyHz": 60,
+  "baseConditions": {
+    "formation": "trefoil",
+    "groupCount": 1,
+    "ambientTempC": 25,
+    "soilResistivityK_m_W": 1.2,
+    "burialDepth_m": 0.8
+  },
+  "authority": "KEPCO / LS Cable / Taihan Cable / Kangwon Cable",
+  "document": "ES 6145-0027 / 22.9kV CNCV-W Technical Catalog",
+  "editionOrRevision": "2021-2024 Manufacturer Standard Practice (Reviewed & Confirmed)",
+  "sourceRef": "Permissible Current Table (Direct Buried, Trefoil)",
+  "rows": [
+    {
+      "csaMm2": 60,
+      "ampacityA": 265
+    },
+    {
+      "csaMm2": 100,
+      "ampacityA": 355
+    },
+    {
+      "csaMm2": 150,
+      "ampacityA": 440
+    },
+    {
+      "csaMm2": 200,
+      "ampacityA": 510
+    },
+    {
+      "csaMm2": 250,
+      "ampacityA": 580
+    },
+    {
+      "csaMm2": 325,
+      "ampacityA": 670
+    },
+    {
+      "csaMm2": 400,
+      "ampacityA": 745
+    },
+    {
+      "csaMm2": 500,
+      "ampacityA": 840
+    },
+    {
+      "csaMm2": 600,
+      "ampacityA": 935
+    }
+  ]
+}

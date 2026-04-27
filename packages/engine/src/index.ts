@@ -57,3 +57,30 @@ export type {
 } from './api/worker.js';
 export { getDatasetManifest, API_VERSION } from './api/manifest.js';
 export type { DatasetManifest, DatasetBundleEntry, SupportedCombination } from './api/manifest.js';
+
+// 22.9kV MV (Korean distribution) extension — parallel pipeline + dataset.
+export { sizeCableMv } from './mv/pipeline-mv.js';
+export type { SizeCableMvOptions } from './mv/pipeline-mv.js';
+export { loadMvDataset, MvDatasetQualityError } from './mv/data-mv.js';
+export type {
+  MvCircuitInput,
+  MvSizingResult,
+  MvCableType,
+  MvInstallationMethod,
+  MvFormation,
+  MvLoadType,
+  MvProtectiveDevice,
+  MvDataset,
+  MvCorrectionFactors,
+  MvAmpacityResult,
+  MvChargingCurrentResult,
+  MvVoltageDropResult,
+  MvShortCircuitResult,
+  MvScreenResult,
+  MvProtectionResult,
+  MvSelectionDriver,
+  MvOverallStatus,
+  MvScreenStatus,
+  MvErrorCode,
+  MvWarningCode,
+} from './mv/types-mv.js';

@@ -14,7 +14,12 @@
  */
 import { describe, it, expect } from 'vitest';
 import { handleWorkerMessage } from '@cable-sizing/engine';
-import { buildCircuitInput, INITIAL_FORM, type FormState } from './components/CircuitForm.js';
+import {
+  buildCircuitInput,
+  buildMvCircuitInput,
+  INITIAL_FORM,
+  type FormState,
+} from './components/CircuitForm.js';
 
 describe('host round-trip smoke — default form → sizeCable', () => {
   const input = buildCircuitInput(INITIAL_FORM);
@@ -73,5 +78,24 @@ describe('host round-trip smoke — structurally-invalid input hits E-API-002', 
     if (res.ok) throw new Error('unreachable');
     expect(res.error.code).toBe('E-API-002');
     expect(res.error.issues?.some((i) => i.path === 'load.powerKW')).toBe(true);
+  });
+});
+
+describe('host round-trip smoke — MV form (TC-01) → sizeCableMv', () => {
+  const mvForm: FormState = { ...INITIAL_FORM, voltageClass: 'MV' };
+  const input = buildMvCircuitInput(mvForm);
+  const res = handleWorkerMessage({ id: 'mv-smoke-1', type: 'sizeCableMv', input });
+
+  it('returns a v1 sizeCableMv:result envelope', () => {
+    expect(res.ok).toBe(true);
+    expect(res.type).toBe('sizeCableMv:result');
+  });
+
+  it('TC-01 default form yields 60mm² PASS', () => {
+    if (!(res.ok && res.type === 'sizeCableMv:result')) throw new Error('unreachable');
+    const r = res.data.result;
+    expect(r.kind).toBe('MV');
+    expect(r.datasetId).toBe('mv_22kv_kr_v1');
+    expect(r.recommendedCSAmm2).toBe(60);
   });
 });

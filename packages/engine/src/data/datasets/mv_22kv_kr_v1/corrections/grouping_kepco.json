@@ -1,0 +1,49 @@
+{
+  "id": "grouping_kepco",
+  "datasetId": "mv_22kv_kr_v1",
+  "factorType": "grouping",
+  "baseFactor": 1.0,
+  "conservativeDirection": "higher",
+  "authority": "KEPCO / LS Cable",
+  "document": "Permissible Current Rating Guide",
+  "editionOrRevision": "2024 Technical Data",
+  "sourceRef": "Grouping Reduction Factors (Direct Buried)",
+  "notes": "Trefoil formation, cables in contact.",
+  "rows": [
+    {
+      "groupCount": 1,
+      "direct_buried": 1.0,
+      "duct_bank": 1.0,
+      "trough": 1.0,
+      "tunnel": 1.0
+    },
+    {
+      "groupCount": 2,
+      "direct_buried": 0.81,
+      "duct_bank": 0.85,
+      "trough": 0.88,
+      "tunnel": 0.9
+    },
+    {
+      "groupCount": 3,
+      "direct_buried": 0.72,
+      "duct_bank": 0.78,
+      "trough": 0.82,
+      "tunnel": 0.85
+    },
+    {
+      "groupCount": 4,
+      "direct_buried": 0.67,
+      "duct_bank": 0.73,
+      "trough": 0.78,
+      "tunnel": 0.81
+    },
+    {
+      "groupCount": 6,
+      "direct_buried": 0.61,
+      "duct_bank": 0.68,
+      "trough": 0.73,
+      "tunnel": 0.76
+    }
+  ]
+}

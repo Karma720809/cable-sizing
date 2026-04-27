@@ -1,0 +1,68 @@
+{
+  "id": "screen_cncvw",
+  "datasetId": "mv_22kv_kr_v1",
+  "cableType": "CNCV-W",
+  "conductorMaterial": "Cu",
+  "screenMaterial": "Cu",
+  "authority": "KEPCO / LS Cable",
+  "document": "ES 6145-0027 Standard Construction",
+  "editionOrRevision": "2021-2024 Standard Practice",
+  "sourceRef": "Screen Conductor Specification",
+  "notes": "screenCsaMm2 is engine-critical value for short-circuit check. screenConstruction is documentation only. Auto-fill by engine.",
+  "rows": [
+    {
+      "csaMm2": 60,
+      "screen_csa_mm2": 22,
+      "screen_construction": "1.2mm x 20",
+      "source_note": "ES 6145-0027"
+    },
+    {
+      "csaMm2": 100,
+      "screen_csa_mm2": 35,
+      "screen_construction": "1.5mm x 20",
+      "source_note": "ES 6145-0027"
+    },
+    {
+      "csaMm2": 150,
+      "screen_csa_mm2": 35,
+      "screen_construction": "1.5mm x 20",
+      "source_note": "ES 6145-0027"
+    },
+    {
+      "csaMm2": 200,
+      "screen_csa_mm2": 45,
+      "screen_construction": "1.5mm x 26",
+      "source_note": "ES 6145-0027"
+    },
+    {
+      "csaMm2": 250,
+      "screen_csa_mm2": 83,
+      "screen_construction": "2.3mm x 20",
+      "source_note": "ES 6145-0027"
+    },
+    {
+      "csaMm2": 325,
+      "screen_csa_mm2": 108,
+      "screen_construction": "2.3mm x 26",
+      "source_note": "ES 6145-0027"
+    },
+    {
+      "csaMm2": 400,
+      "screen_csa_mm2": 132,
+      "screen_construction": "2.6mm x 25",
+      "source_note": "ES 6145-0027"
+    },
+    {
+      "csaMm2": 500,
+      "screen_csa_mm2": 165,
+      "screen_construction": "2.6mm x 32",
+      "source_note": "ES 6145-0027"
+    },
+    {
+      "csaMm2": 600,
+      "screen_csa_mm2": 201,
+      "screen_construction": "2.6mm x 38",
+      "source_note": "ES 6145-0027"
+    }
+  ]
+}

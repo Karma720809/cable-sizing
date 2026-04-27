@@ -1,0 +1,18 @@
+{
+  "datasetId": "mv_22kv_kr_v1",
+  "standard": "KEPCO_ES6145",
+  "scope": "MV_22kV",
+  "title": "22.9kV CNCV-W Cu Cable Sizing Dataset (Korean Distribution)",
+  "sourceName": "KEPCO ES 6145-0027 / LS Cable / Taihan Cable / Kangwon Cable",
+  "sourceEdition": "2021-2024 Manufacturer Standard Practice (Reviewed & Confirmed)",
+  "sourceNotes": "Re-reviewed and finalized. All P0/P1 data validated for 1.2 K·m/W standard (direct buried) and meta-aligned conditions (duct bank, trough).",
+  "licensingNote": "internal-use, derived from published KEPCO-aligned manufacturer data",
+  "createdAt": "2026-04-27T00:00:00Z",
+  "updatedAt": "2026-04-27T00:00:00Z",
+  "status": "approved",
+  "voltageSystem": "22.9kV-Y multi-grounded",
+  "frequencyHz": 60,
+  "conductorMaterial": "Cu",
+  "insulationType": "XLPE",
+  "cableFamily": "CNCV single-core"
+}
