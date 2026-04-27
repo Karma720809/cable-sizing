@@ -1,0 +1,67 @@
+{
+  "id": "rx_cncvw_cu_60hz",
+  "datasetId": "mv_22kv_kr_v1",
+  "cableType": "CNCV-W",
+  "conductorMaterial": "Cu",
+  "insulationType": "XLPE",
+  "voltageGrade": "12.7/22",
+  "frequencyHz": 60,
+  "meta": {
+    "r_reference_temp_c": 90,
+    "x_frequency_hz": 60,
+    "arrangement": "trefoil",
+    "source_type": "direct"
+  },
+  "authority": "LS Cable / Kangwon Cable",
+  "document": "22.9kV CNCV-W Technical Specification",
+  "editionOrRevision": "2024 Edition",
+  "sourceRef": "Electrical Constants (R, X)",
+  "notes": "R at 90C, X at 60Hz. Trefoil arrangement. sourceType=direct.",
+  "rows": [
+    {
+      "csaMm2": 60,
+      "r_ohm_per_km": 0.388,
+      "x_ohm_per_km": 0.126
+    },
+    {
+      "csaMm2": 100,
+      "r_ohm_per_km": 0.231,
+      "x_ohm_per_km": 0.118
+    },
+    {
+      "csaMm2": 150,
+      "r_ohm_per_km": 0.158,
+      "x_ohm_per_km": 0.113
+    },
+    {
+      "csaMm2": 200,
+      "r_ohm_per_km": 0.118,
+      "x_ohm_per_km": 0.109
+    },
+    {
+      "csaMm2": 250,
+      "r_ohm_per_km": 0.0939,
+      "x_ohm_per_km": 0.106
+    },
+    {
+      "csaMm2": 325,
+      "r_ohm_per_km": 0.0722,
+      "x_ohm_per_km": 0.102
+    },
+    {
+      "csaMm2": 400,
+      "r_ohm_per_km": 0.0588,
+      "x_ohm_per_km": 0.099
+    },
+    {
+      "csaMm2": 500,
+      "r_ohm_per_km": 0.0469,
+      "x_ohm_per_km": 0.096
+    },
+    {
+      "csaMm2": 600,
+      "r_ohm_per_km": 0.0391,
+      "x_ohm_per_km": 0.094
+    }
+  ]
+}

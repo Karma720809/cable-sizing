@@ -1,0 +1,35 @@
+{
+  "id": "burial_depth_kepco",
+  "datasetId": "mv_22kv_kr_v1",
+  "factorType": "burial_depth",
+  "baseBurialDepth_m": 0.8,
+  "baseFactor": 1.0,
+  "conservativeDirection": "higher",
+  "authority": "KEPCO",
+  "document": "Distribution Design Standard",
+  "editionOrRevision": "2023 Revision",
+  "sourceRef": "Depth Correction Factor Table",
+  "notes": "Base=0.8m. Applied to direct buried installation.",
+  "rows": [
+    {
+      "burialDepth_m": 0.6,
+      "factor": 1.02
+    },
+    {
+      "burialDepth_m": 0.8,
+      "factor": 1.0
+    },
+    {
+      "burialDepth_m": 1.0,
+      "factor": 0.98
+    },
+    {
+      "burialDepth_m": 1.2,
+      "factor": 0.96
+    },
+    {
+      "burialDepth_m": 1.5,
+      "factor": 0.94
+    }
+  ]
+}

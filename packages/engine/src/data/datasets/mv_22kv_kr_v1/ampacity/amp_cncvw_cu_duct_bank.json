@@ -1,0 +1,60 @@
+{
+  "id": "amp_cncvw_cu_duct_bank",
+  "datasetId": "mv_22kv_kr_v1",
+  "cableType": "CNCV-W",
+  "conductorMaterial": "Cu",
+  "insulationType": "XLPE",
+  "voltageGrade": "12.7/22",
+  "installationMethod": "duct_bank",
+  "frequencyHz": 60,
+  "baseConditions": {
+    "formation": "trefoil",
+    "groupCount": 1,
+    "ambientTempC": 25,
+    "soilResistivityK_m_W": 1.0,
+    "burialDepth_m": 0.8,
+    "ductDiameter_mm": 175
+  },
+  "authority": "KEPCO / LS Cable",
+  "document": "Manufacturer Technical Data",
+  "editionOrRevision": "2024 Practice (Meta Aligned)",
+  "sourceRef": "Permissible Current (Duct Bank)",
+  "rows": [
+    {
+      "csaMm2": 60,
+      "ampacityA": 225
+    },
+    {
+      "csaMm2": 100,
+      "ampacityA": 300
+    },
+    {
+      "csaMm2": 150,
+      "ampacityA": 375
+    },
+    {
+      "csaMm2": 200,
+      "ampacityA": 435
+    },
+    {
+      "csaMm2": 250,
+      "ampacityA": 495
+    },
+    {
+      "csaMm2": 325,
+      "ampacityA": 570
+    },
+    {
+      "csaMm2": 400,
+      "ampacityA": 635
+    },
+    {
+      "csaMm2": 500,
+      "ampacityA": 715
+    },
+    {
+      "csaMm2": 600,
+      "ampacityA": 800
+    }
+  ]
+}

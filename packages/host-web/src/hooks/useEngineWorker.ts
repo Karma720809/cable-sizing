@@ -28,6 +28,7 @@ export interface UseEngineWorker {
   manifest: () => Promise<WorkerResponse>;
   validate: (input: unknown) => Promise<WorkerResponse>;
   sizeCable: (input: unknown) => Promise<WorkerResponse>;
+  sizeCableMv: (input: unknown) => Promise<WorkerResponse>;
 }
 
 export function useEngineWorker(): UseEngineWorker {
@@ -82,6 +83,7 @@ export function useEngineWorker(): UseEngineWorker {
       manifest: () => send({ type: 'manifest' }),
       validate: (input: unknown) => send({ type: 'validate', input }),
       sizeCable: (input: unknown) => send({ type: 'sizeCable', input }),
+      sizeCableMv: (input: unknown) => send({ type: 'sizeCableMv', input }),
     }),
     [ready, send],
   );

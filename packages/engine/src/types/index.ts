@@ -277,6 +277,23 @@ export type ErrorCode =
   | 'E-DOMAIN-001' // efficiency = 0
   | 'E-CSA-001' // required csa > max supported
   | 'E-DATA-001' // dataset quality check failed
+  // ── MV (22.9kV Korean distribution) extension ──────────────────
+  | 'E-MV-VAL-001' // MV system inputs invalid (voltage/phase/freq)
+  | 'E-MV-VAL-002' // MV load inputs missing or out of range
+  | 'E-MV-VAL-003' // MV route length missing or ≤ 0
+  | 'E-MV-VAL-004' // MV soil resistivity required (no silent default)
+  | 'E-MV-VAL-005' // MV flat_spaced formation requires spacing
+  | 'E-MV-VAL-006' // MV earth-fault one-of-two missing
+  | 'E-MV-LOOKUP-001' // MV ampacity table missing for cableType + method
+  | 'E-MV-LOOKUP-002' // MV impedance row missing for csa
+  | 'E-MV-LOOKUP-003' // MV capacitance row missing for csa
+  | 'E-MV-LOOKUP-004' // MV screen row missing for csa
+  | 'E-MV-LOOKUP-005' // MV grouping out of range
+  | 'E-MV-LOOKUP-006' // MV ground temperature out of range
+  | 'E-MV-LOOKUP-007' // MV soil resistivity out of range
+  | 'E-MV-LOOKUP-008' // MV burial depth out of range
+  | 'E-MV-CSA-001' // MV required csa exceeds maximum standard size
+  | 'E-MV-DATA-001' // MV dataset quality check failed
   /**
    * Added in Stage 5C (engine 0.10.0).
    *
@@ -366,7 +383,20 @@ export type WarningCode =
    *
    * Never fires when `resistanceModel === 'fixed_reference'`.
    */
-  | 'W-TEMP-CORRECTION-CAPPED';
+  | 'W-TEMP-CORRECTION-CAPPED'
+  // ── MV (22.9kV Korean distribution) extension ──────────────────
+  | 'W-MV-DEFAULT-APPLIED'
+  | 'W-MV-IB-OVERRIDE'
+  | 'W-MV-LOOKUP-SAFE-SIDE'
+  | 'W-MV-CHARGING-IGNORED'
+  | 'W-MV-CHARGING-APPLIED'
+  | 'W-MV-CHARGING-CONSERVATIVE'
+  | 'W-MV-CAPACITANCE-OVERRIDE'
+  | 'W-MV-AMBIENT-DEFAULT'
+  | 'W-MV-SCREEN-AUTO-FILLED'
+  | 'W-MV-SCREEN-OVERRIDE'
+  | 'W-MV-SCREEN-INCOMPLETE'
+  | 'W-MV-PROTECTION-DISCLAIMER';
 
 // ─────────────────────────────────────────────────────────────────────
 // Dataset shape (matches iec60364_lv_v1 on disk)

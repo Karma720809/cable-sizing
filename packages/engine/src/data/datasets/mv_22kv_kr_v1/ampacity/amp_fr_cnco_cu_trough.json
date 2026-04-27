@@ -1,0 +1,58 @@
+{
+  "id": "amp_fr_cnco_cu_trough",
+  "datasetId": "mv_22kv_kr_v1",
+  "cableType": "FR-CNCO-W",
+  "conductorMaterial": "Cu",
+  "insulationType": "XLPE",
+  "voltageGrade": "12.7/22",
+  "installationMethod": "trough",
+  "frequencyHz": 60,
+  "baseConditions": {
+    "formation": "trefoil",
+    "groupCount": 1,
+    "ambientTempC": 40,
+    "environment": "air"
+  },
+  "authority": "LS Cable / Taihan Cable",
+  "document": "FR-CNCO-W Technical Catalog",
+  "editionOrRevision": "2024 Edition (Meta Aligned)",
+  "sourceRef": "Permissible Current (Trough/Tunnel)",
+  "rows": [
+    {
+      "csaMm2": 60,
+      "ampacityA": 240
+    },
+    {
+      "csaMm2": 100,
+      "ampacityA": 320
+    },
+    {
+      "csaMm2": 150,
+      "ampacityA": 400
+    },
+    {
+      "csaMm2": 200,
+      "ampacityA": 465
+    },
+    {
+      "csaMm2": 250,
+      "ampacityA": 530
+    },
+    {
+      "csaMm2": 325,
+      "ampacityA": 610
+    },
+    {
+      "csaMm2": 400,
+      "ampacityA": 680
+    },
+    {
+      "csaMm2": 500,
+      "ampacityA": 765
+    },
+    {
+      "csaMm2": 600,
+      "ampacityA": 855
+    }
+  ]
+}

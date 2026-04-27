@@ -1,0 +1,39 @@
+{
+  "id": "temp_ground_kepco",
+  "datasetId": "mv_22kv_kr_v1",
+  "factorType": "ambient_ground_temperature",
+  "baseTemperatureC": 25,
+  "baseFactor": 1.0,
+  "conservativeDirection": "higher",
+  "authority": "KEPCO",
+  "document": "KEPCO Distribution Design Standard (지중배전 설계기준)",
+  "editionOrRevision": "2023 Revision",
+  "sourceRef": "Temperature Correction Factor Table (Ground)",
+  "notes": "Base=25C. Applied for direct buried and duct bank.",
+  "rows": [
+    {
+      "ambientTempC": 15,
+      "factor": 1.08
+    },
+    {
+      "ambientTempC": 20,
+      "factor": 1.04
+    },
+    {
+      "ambientTempC": 25,
+      "factor": 1.0
+    },
+    {
+      "ambientTempC": 30,
+      "factor": 0.96
+    },
+    {
+      "ambientTempC": 35,
+      "factor": 0.91
+    },
+    {
+      "ambientTempC": 40,
+      "factor": 0.87
+    }
+  ]
+}

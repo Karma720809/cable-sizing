@@ -28,10 +28,12 @@
  *   'sizeCable'  → sizeCable:result { result: SizingResult }  | error E-API-002
  */
 import { sizeCable } from '../orchestrator/pipeline.js';
+import { sizeCableMv } from '../mv/pipeline-mv.js';
 import { parseCircuitInput } from './schema.js';
 import { getDatasetManifest, API_VERSION, type DatasetManifest } from './manifest.js';
 import { ENGINE_VERSION } from '../version.js';
 import type { SizingResult } from '../types/index.js';
+import type { MvCircuitInput, MvSizingResult } from '../mv/types-mv.js';
 
 export type WorkerValidationIssue = { path: string; message: string };
 
@@ -39,7 +41,8 @@ export type WorkerRequest =
   | { id: string; type: 'ping' }
   | { id: string; type: 'manifest' }
   | { id: string; type: 'validate'; input: unknown }
-  | { id: string; type: 'sizeCable'; input: unknown };
+  | { id: string; type: 'sizeCable'; input: unknown }
+  | { id: string; type: 'sizeCableMv'; input: unknown };
 
 export type WorkerApiErrorCode = 'E-API-001' | 'E-API-002';
 
@@ -70,6 +73,12 @@ export type WorkerSuccess =
       type: 'sizeCable:result';
       requestId: string;
       data: { result: SizingResult };
+    }
+  | {
+      ok: true;
+      type: 'sizeCableMv:result';
+      requestId: string;
+      data: { result: MvSizingResult };
     };
 
 export interface WorkerFailure {
@@ -151,6 +160,13 @@ export function handleWorkerMessage(req: WorkerRequest): WorkerResponse {
       }
       const result = sizeCable(p.value);
       return ok(id, 'sizeCable:result', { result });
+    }
+
+    case 'sizeCableMv': {
+      // MV input validation lives inside sizeCableMv() — errors flow through
+      // result.errors rather than rejecting the envelope.
+      const result = sizeCableMv(req.input as MvCircuitInput);
+      return ok(id, 'sizeCableMv:result', { result });
     }
 
     default: {

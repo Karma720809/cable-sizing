@@ -21,6 +21,7 @@ import {
   CircuitForm,
   INITIAL_FORM,
   buildCircuitInput,
+  buildMvCircuitInput,
   type FormState,
 } from './components/CircuitForm.js';
 import { ResultPanel } from './components/ResultPanel.js';
@@ -53,7 +54,10 @@ export function App(): React.ReactElement {
   const onSubmit = async (): Promise<void> => {
     setBusy(true);
     try {
-      const res = await engine.sizeCable(buildCircuitInput(form));
+      const res =
+        form.voltageClass === 'MV'
+          ? await engine.sizeCableMv(buildMvCircuitInput(form))
+          : await engine.sizeCable(buildCircuitInput(form));
       setLastRes(res);
     } finally {
       setBusy(false);

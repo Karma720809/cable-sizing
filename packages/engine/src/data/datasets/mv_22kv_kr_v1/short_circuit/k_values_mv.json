@@ -1,0 +1,24 @@
+{
+  "id": "k_values_mv",
+  "datasetId": "mv_22kv_kr_v1",
+  "authority": "IEC 60949 / IEC 60364-5-54 Annex A",
+  "notes": "Cu/XLPE conductor and screen k=143. Initial temp 90C, final temp 250C.",
+  "values": [
+    {
+      "material": "Cu",
+      "insulationType": "XLPE",
+      "application": "conductor",
+      "kValue": 143,
+      "initialTempC": 90,
+      "finalTempC": 250
+    },
+    {
+      "material": "Cu",
+      "insulationType": "XLPE",
+      "application": "screen",
+      "kValue": 143,
+      "initialTempC": 90,
+      "finalTempC": 250
+    }
+  ]
+}

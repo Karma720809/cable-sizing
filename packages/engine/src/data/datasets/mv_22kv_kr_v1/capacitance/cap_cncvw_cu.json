@@ -1,0 +1,51 @@
+{
+  "id": "cap_cncvw_cu",
+  "datasetId": "mv_22kv_kr_v1",
+  "cableType": "CNCV-W",
+  "conductorMaterial": "Cu",
+  "insulationType": "XLPE",
+  "voltageGrade": "12.7/22",
+  "authority": "LS Cable / Taihan Cable",
+  "document": "Technical Data Table for 22.9kV Distribution",
+  "editionOrRevision": "2023-2024 Revision",
+  "sourceRef": "Capacitance Table (uF/km)",
+  "notes": "Default values for CNCV-W 12.7/22kV single-core. Lookup key: [cableType, voltageGrade, csaMm2].",
+  "rows": [
+    {
+      "csaMm2": 60,
+      "capacitance_uF_per_km": 0.28
+    },
+    {
+      "csaMm2": 100,
+      "capacitance_uF_per_km": 0.33
+    },
+    {
+      "csaMm2": 150,
+      "capacitance_uF_per_km": 0.38
+    },
+    {
+      "csaMm2": 200,
+      "capacitance_uF_per_km": 0.42
+    },
+    {
+      "csaMm2": 250,
+      "capacitance_uF_per_km": 0.46
+    },
+    {
+      "csaMm2": 325,
+      "capacitance_uF_per_km": 0.51
+    },
+    {
+      "csaMm2": 400,
+      "capacitance_uF_per_km": 0.56
+    },
+    {
+      "csaMm2": 500,
+      "capacitance_uF_per_km": 0.62
+    },
+    {
+      "csaMm2": 600,
+      "capacitance_uF_per_km": 0.68
+    }
+  ]
+}

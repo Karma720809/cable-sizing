@@ -1,0 +1,47 @@
+{
+  "id": "soil_resistivity_kepco",
+  "datasetId": "mv_22kv_kr_v1",
+  "factorType": "soil_resistivity",
+  "baseSoilResistivityK_m_W": 1.2,
+  "baseFactor": 1.0,
+  "conservativeDirection": "higher",
+  "authority": "KEPCO",
+  "document": "KEPCO Technical Standard",
+  "editionOrRevision": "2022-2024 Practice",
+  "sourceRef": "Soil Thermal Resistivity Correction Factors",
+  "notes": "Base=1.2 K·m/W. Higher-conservative lookup rule applied.",
+  "rows": [
+    {
+      "soilResistivityK_m_W": 0.5,
+      "factor": 1.21
+    },
+    {
+      "soilResistivityK_m_W": 0.7,
+      "factor": 1.13
+    },
+    {
+      "soilResistivityK_m_W": 1.0,
+      "factor": 1.05
+    },
+    {
+      "soilResistivityK_m_W": 1.2,
+      "factor": 1.0
+    },
+    {
+      "soilResistivityK_m_W": 1.5,
+      "factor": 0.94
+    },
+    {
+      "soilResistivityK_m_W": 2.0,
+      "factor": 0.86
+    },
+    {
+      "soilResistivityK_m_W": 2.5,
+      "factor": 0.8
+    },
+    {
+      "soilResistivityK_m_W": 3.0,
+      "factor": 0.75
+    }
+  ]
+}
