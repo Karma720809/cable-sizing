@@ -51,24 +51,32 @@ export function validateCircuitInput(input: CircuitInput): EngineError[] {
     input.load.designCurrentOverrideA != null && input.load.designCurrentOverrideA > 0;
   const hasOverride = hasNewOverride || hasLegacyOverride;
   // v1.3 Stage B: transformer/motor get alternate "load specified" sources.
-  const hasFla =
-    input.load.type === 'motor' &&
-    typeof input.load.fla === 'number' &&
-    input.load.fla > 0;
+  //
+  // CR-OQ-1 / CR-OQ-4 require that *invalid* override values or *blank/null*
+  // motor FLA do NOT get preempted by E-VAL-004. We therefore treat a
+  // provided override/FLA field as "load specified" even when it's <= 0.
+  const hasNewOverrideProvided =
+    input.overrides?.designCurrent != null && Number.isFinite(input.overrides.designCurrent);
+  const hasLegacyOverrideProvided =
+    input.load.designCurrentOverrideA != null &&
+    Number.isFinite(input.load.designCurrentOverrideA);
+  const hasOverrideProvided = hasNewOverrideProvided || hasLegacyOverrideProvided;
+
+  const hasFlaField = input.load.type === 'motor' && input.load.fla !== undefined;
   const hasKva =
     input.load.type === 'transformer' &&
     typeof input.load.kva === 'number' &&
+    Number.isFinite(input.load.kva) &&
     input.load.kva > 0;
-  const hasLoadSpec = hasOverride || hasFla || hasKva;
-  if (!hasLoadSpec) {
-    if (input.load.powerKW == null || !(input.load.powerKW > 0)) {
-      push(
-        errors,
-        'E-VAL-004',
-        'powerKW must be provided (or use FLA / kVA / designCurrentOverrideA / overrides.designCurrent)',
-        'load.powerKW',
-      );
-    }
+
+  const hasLoadSpec = hasOverrideProvided || hasFlaField || hasKva;
+  if (!hasLoadSpec && (input.load.powerKW == null || !(input.load.powerKW > 0))) {
+    push(
+      errors,
+      'E-VAL-004',
+      'powerKW must be provided (or use FLA / kVA / designCurrentOverrideA / overrides.designCurrent)',
+      'load.powerKW',
+    );
   }
   // PF/η/df range checks always run, but only when caller bothered to set
   // them (null is fine — defaults will fill, transformer/override paths

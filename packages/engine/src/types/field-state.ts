@@ -144,4 +144,18 @@ export const FieldStateBuilder = {
   unavailable(reason: FieldReason = 'not_applicable'): FieldState<never> {
     return { source: 'auto_dataset', status: 'unavailable', value: null, reason };
   },
+  invalid<T>(
+    source: FieldSource,
+    reason: FieldReason = 'out_of_range',
+    opts?: { formula?: string; inputs?: Record<string, unknown> },
+  ): FieldState<T> {
+    return {
+      source,
+      status: 'invalid',
+      value: null,
+      reason,
+      ...(opts?.formula ? { formula: opts.formula } : {}),
+      ...(opts?.inputs ? { inputs: opts.inputs } : {}),
+    };
+  },
 };

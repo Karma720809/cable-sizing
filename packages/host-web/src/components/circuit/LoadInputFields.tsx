@@ -19,7 +19,7 @@ export type LoadType = 'general' | 'motor' | 'heater' | 'lighting' | 'transforme
 export interface LoadValues {
   loadType: LoadType;
   powerKW: number;
-  fla: number;
+  fla: number | null;
   kva: number;
 }
 
@@ -49,7 +49,7 @@ export function LoadInputFields({ values, onChange }: Props): React.ReactElement
 
       {loadType === 'motor' && (
         <>
-          <NumField
+          <NullableNumField
             label="FLA (A)"
             value={values.fla}
             onChange={(n) => onChange({ fla: n })}
@@ -113,6 +113,41 @@ function NumField({
         step={step}
         value={value}
         onChange={(e) => {
+          const n = Number(e.target.value);
+          if (Number.isFinite(n)) onChange(n);
+        }}
+        data-testid={testId}
+      />
+    </label>
+  );
+}
+
+function NullableNumField({
+  label,
+  value,
+  onChange,
+  step = 1,
+  testId,
+}: {
+  label: string;
+  value: number | null;
+  onChange: (n: number | null) => void;
+  step?: number;
+  testId?: string;
+}): React.ReactElement {
+  return (
+    <label className="field">
+      <span>{label}</span>
+      <input
+        type="number"
+        step={step}
+        value={value ?? ''}
+        onChange={(e) => {
+          // `input type=number` emits '' when cleared; represent that as null.
+          if (e.target.value === '') {
+            onChange(null);
+            return;
+          }
           const n = Number(e.target.value);
           if (Number.isFinite(n)) onChange(n);
         }}

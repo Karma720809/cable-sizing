@@ -80,7 +80,7 @@ export interface FormState {
   loadType: 'general' | 'motor' | 'heater' | 'lighting' | 'transformer';
   powerKW: number;
   /** Motor full-load amps (CR-OQ-1, motor only). */
-  fla: number;
+  fla: number | null;
   /** Transformer apparent power (CR-OQ-1, transformer only). */
   kva: number;
   powerFactor: number;

@@ -50,16 +50,29 @@ export function deriveDesignCurrent(input: CircuitInput): DeriveDesignCurrentRes
 
   // ── 1. New-style override (CR-OQ-1) ────────────────────────────────
   const newOverride = input.overrides?.designCurrent;
-  if (typeof newOverride === 'number' && Number.isFinite(newOverride) && newOverride > 0) {
-    pushWarning(
-      warnings,
-      'W-CR-001',
-      `designCurrent overridden to ${newOverride} A via overrides.designCurrent (load params ignored)`,
-      'overrides.designCurrent',
-    );
+  if (typeof newOverride === 'number' && Number.isFinite(newOverride)) {
+    if (newOverride > 0) {
+      pushWarning(
+        warnings,
+        'W-CR-001',
+        `designCurrent overridden to ${newOverride} A via overrides.designCurrent (load params ignored)`,
+        'overrides.designCurrent',
+      );
+      return {
+        state: FieldStateBuilder.override<number>(newOverride),
+        designCurrentA: newOverride,
+        warnings,
+        intermediate: { source: 'overrides.designCurrent', I_B: newOverride },
+      };
+    }
+
+    // CR-OQ-4: override ON + blank/0/negative manual IB must block sizing.
     return {
-      state: FieldStateBuilder.override<number>(newOverride),
-      designCurrentA: newOverride,
+      state: FieldStateBuilder.invalid<number>('override', 'out_of_range', {
+        formula: FORMULA_IDS.OVERRIDE,
+        inputs: { manualDesignCurrentA: newOverride },
+      }),
+      designCurrentA: null,
       warnings,
       intermediate: { source: 'overrides.designCurrent', I_B: newOverride },
     };
@@ -96,14 +109,28 @@ export function deriveDesignCurrent(input: CircuitInput): DeriveDesignCurrentRes
   // 3a. motor + FLA → I_B = FLA · df
   if (input.load.type === 'motor') {
     const fla = input.load.fla;
-    if (typeof fla === 'number' && Number.isFinite(fla) && fla > 0) {
-      const ib = new Decimal(fla).mul(df).toNumber();
+    if (typeof fla === 'number' && Number.isFinite(fla)) {
+      if (fla > 0) {
+        const ib = new Decimal(fla).mul(df).toNumber();
+        const inputs = { fla, demandFactor: df, formula: 'IB = FLA · df' };
+        return {
+          state: FieldStateBuilder.autoFormula<number>(ib, FORMULA_IDS.IB_FLA, inputs),
+          designCurrentA: ib,
+          warnings,
+          intermediate: { ...inputs, I_B: ib },
+        };
+      }
+
+      // CR-OQ-1: FLA must not default to 0; non-positive FLA makes designCurrent invalid.
       const inputs = { fla, demandFactor: df, formula: 'IB = FLA · df' };
       return {
-        state: FieldStateBuilder.autoFormula<number>(ib, FORMULA_IDS.IB_FLA, inputs),
-        designCurrentA: ib,
+        state: FieldStateBuilder.invalid<number>('auto_formula', 'out_of_range', {
+          formula: FORMULA_IDS.IB_FLA,
+          inputs,
+        }),
+        designCurrentA: null,
         warnings,
-        intermediate: { ...inputs, I_B: ib },
+        intermediate: { ...inputs, I_B: null },
       };
     }
   }

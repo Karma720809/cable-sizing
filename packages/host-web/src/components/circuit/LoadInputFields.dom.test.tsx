@@ -29,6 +29,16 @@ describe('LoadInputFields (CR-OQ-1)', () => {
     expect(screen.getByTestId('load-powerkw-fallback')).toBeInTheDocument();
   });
 
+  it('motor: clearing FLA emits fla=null (no implicit 0 default)', () => {
+    const onChange = vi.fn();
+    render(
+      <LoadInputFields values={{ ...baseValues, loadType: 'motor' }} onChange={onChange} />,
+    );
+    const fla = screen.getByTestId('load-fla') as HTMLInputElement;
+    fireEvent.change(fla, { target: { value: '' } });
+    expect(onChange).toHaveBeenLastCalledWith({ fla: null });
+  });
+
   it('transformer: shows kVA only — hides P_kW and FLA', () => {
     render(
       <LoadInputFields
