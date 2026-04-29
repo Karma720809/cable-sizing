@@ -25,6 +25,7 @@ import type {
 } from '@cable-sizing/engine';
 import { hintFor } from './codeHints.js';
 import { DerivedFieldDisplay } from './circuit/DerivedFieldDisplay.js';
+import { StatusBadge } from './circuit/StatusBadge.js';
 
 export function ResultPanel({ res }: { res: WorkerResponse | null }): React.ReactElement {
   if (!res) {
@@ -73,6 +74,19 @@ export function ResultPanel({ res }: { res: WorkerResponse | null }): React.Reac
   }
 
   const r = res.data.result;
+  const designCurrentState = r.fieldStates?.designCurrent;
+  const ibHeroValue =
+    designCurrentState && designCurrentState.status === 'valid' && designCurrentState.value != null
+      ? `${round(designCurrentState.value as number, 2)} A`
+      : '—';
+  const ibHeroMeta =
+    designCurrentState && designCurrentState.status !== 'valid' ? (
+      <span className="muted">
+        {' '}
+        <StatusBadge status={designCurrentState.status} />
+        {designCurrentState.reason ? ` (${designCurrentState.reason})` : ''}
+      </span>
+    ) : null;
   return (
     <section
       className={`panel status-${r.overallStatus.toLowerCase()}`}
@@ -92,7 +106,7 @@ export function ResultPanel({ res }: { res: WorkerResponse | null }): React.Reac
           </span>
         </div>
         <div className="hero-meta">
-          <KV k="IB (design current)" v={`${round(r.designCurrentA, 2)} A`} />
+          <KV k="IB (design current)" v={<span>{ibHeroValue}{ibHeroMeta}</span>} />
           <KV k="Driver" v={<code>{r.selectionDriver}</code>} />
         </div>
       </div>

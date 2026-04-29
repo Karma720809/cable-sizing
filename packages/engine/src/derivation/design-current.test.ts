@@ -72,6 +72,54 @@ describe('deriveDesignCurrent — motor', () => {
     });
     expect(r.designCurrentA).toBe(80);
   });
+
+  it('motor fla = 0 → invalid (no fallback to powerKW)', () => {
+    const r = deriveDesignCurrent({
+      ...BASE,
+      load: { ...BASE.load, type: 'motor', fla: 0, powerKW: 25 },
+    });
+    expect(r.state.status).toBe('invalid');
+    expect(r.designCurrentA).toBeNull();
+  });
+
+  it('motor fla < 0 → invalid (no fallback to powerKW)', () => {
+    const r = deriveDesignCurrent({
+      ...BASE,
+      load: { ...BASE.load, type: 'motor', fla: -5, powerKW: 25 },
+    });
+    expect(r.state.status).toBe('invalid');
+    expect(r.designCurrentA).toBeNull();
+  });
+
+  it('motor fla blank/null + missing powerKW → incomplete', () => {
+    const r = deriveDesignCurrent({
+      ...BASE,
+      load: {
+        ...BASE.load,
+        type: 'motor',
+        fla: null,
+        powerKW: null,
+        powerFactor: null,
+        efficiency: null,
+      },
+    });
+    expect(r.state.status).toBe('incomplete');
+    expect(r.designCurrentA).toBeNull();
+  });
+
+  it('motor fla blank/null + valid powerKW → falls back to IB_3PH_KW', () => {
+    const r = deriveDesignCurrent({
+      ...BASE,
+      load: {
+        ...BASE.load,
+        type: 'motor',
+        fla: null,
+      },
+    });
+    expect(r.state.status).toBe('valid');
+    expect(r.state.formula).toBe(FORMULA_IDS.IB_3PH_KW);
+    expect(r.designCurrentA).toBeCloseTo(47.17, 2);
+  });
 });
 
 describe('deriveDesignCurrent — transformer', () => {
@@ -154,6 +202,12 @@ describe('deriveDesignCurrent — overrides', () => {
     });
     expect(r.designCurrentA).toBe(200);
     expect(r.warnings.find((w) => w.code === 'W-CR-006')).toBeUndefined(); // legacy path skipped
+  });
+
+  it('overrides.designCurrent = 0 → invalid (blocks sizing)', () => {
+    const r = deriveDesignCurrent({ ...BASE, overrides: { designCurrent: 0 } });
+    expect(r.state.status).toBe('invalid');
+    expect(r.designCurrentA).toBeNull();
   });
 });
 

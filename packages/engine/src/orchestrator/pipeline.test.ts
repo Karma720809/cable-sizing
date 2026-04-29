@@ -269,6 +269,95 @@ describe('sizeCable — warnings (W-*)', () => {
   });
 });
 
+describe('sizeCable — CR-OQ-1/CR-OQ-4 designCurrent blocking', () => {
+  it('motor fla = 0 → designCurrent FieldState invalid, sizing blocked', () => {
+    const r = sizeCable(
+      baseInput({
+        load: {
+          type: 'motor',
+          powerKW: 25,
+          powerFactor: 0.85,
+          efficiency: 0.9,
+          demandFactor: 1.0,
+          fla: 0,
+        },
+      }),
+    );
+    expect(r.overallStatus).toBe('INCOMPLETE');
+    expect(r.recommendedCSAmm2).toBeNull();
+    expect(r.fieldStates?.designCurrent?.status).toBe('invalid');
+    expect(r.fieldStates?.designCurrent?.value).toBeNull();
+  });
+
+  it('motor fla < 0 → designCurrent FieldState invalid, sizing blocked', () => {
+    const r = sizeCable(
+      baseInput({
+        load: {
+          type: 'motor',
+          powerKW: 25,
+          powerFactor: 0.85,
+          efficiency: 0.9,
+          demandFactor: 1.0,
+          fla: -5,
+        },
+      }),
+    );
+    expect(r.overallStatus).toBe('INCOMPLETE');
+    expect(r.recommendedCSAmm2).toBeNull();
+    expect(r.fieldStates?.designCurrent?.status).toBe('invalid');
+    expect(r.fieldStates?.designCurrent?.value).toBeNull();
+  });
+
+  it('override designCurrent = 0 → designCurrent FieldState invalid, sizing blocked', () => {
+    const r = sizeCable(baseInput({ overrides: { designCurrent: 0 } }));
+    expect(r.overallStatus).toBe('INCOMPLETE');
+    expect(r.recommendedCSAmm2).toBeNull();
+    expect(r.fieldStates?.designCurrent?.status).toBe('invalid');
+    expect(r.fieldStates?.designCurrent?.value).toBeNull();
+  });
+
+  it('motor fla blank/null + missing powerKW → designCurrent incomplete, sizing blocked', () => {
+    const r = sizeCable(
+      baseInput({
+        load: {
+          type: 'motor',
+          powerKW: null,
+          powerFactor: null,
+          efficiency: null,
+          demandFactor: 1.0,
+          fla: null,
+        },
+      }),
+    );
+    expect(r.overallStatus).toBe('INCOMPLETE');
+    expect(r.recommendedCSAmm2).toBeNull();
+    expect(r.fieldStates?.designCurrent?.status).toBe('incomplete');
+    expect(r.fieldStates?.designCurrent?.value).toBeNull();
+  });
+
+  it('motor fla blank/null + valid powerKW → falls back to IB_3PH_KW', () => {
+    const r = sizeCable(
+      baseInput({
+        load: {
+          type: 'motor',
+          powerKW: 25,
+          powerFactor: 0.85,
+          efficiency: 0.9,
+          demandFactor: 1.0,
+          fla: null,
+        },
+      }),
+    );
+    expect(r.fieldStates?.designCurrent?.status).toBe('valid');
+    expect(r.fieldStates?.designCurrent?.formula).toBe('IB_3PH_KW');
+    expect(r.fieldStates?.designCurrent?.value).not.toBeNull();
+    if (r.fieldStates?.designCurrent?.value != null) {
+      expect(r.fieldStates.designCurrent.value as number).toBeCloseTo(47.17, 2);
+    }
+    expect(r.recommendedCSAmm2).not.toBeNull();
+  });
+});
+
 describe('sizeCable — protection coordination lattice', () => {
   it('FAIL when In > IZ even after IZ-recheck exhausts sizes', () => {
     // Unreachable In (10 kA) forces E-CSA-001 via IZ recheck exhaustion.

@@ -62,7 +62,11 @@ export function validateCircuitInput(input: CircuitInput): EngineError[] {
     Number.isFinite(input.load.designCurrentOverrideA);
   const hasOverrideProvided = hasNewOverrideProvided || hasLegacyOverrideProvided;
 
-  const hasFlaField = input.load.type === 'motor' && input.load.fla !== undefined;
+  // CR-OQ-1: motor FLA is optional (may be null/undefined); if it's missing,
+  // derivation can fall back to powerKW. Avoid throwing E-VAL-004 for motor
+  // so the derivation module can emit FieldState.status=incomplete/invalid
+  // (instead of masking it with an input-validation fatal error).
+  const hasFlaField = input.load.type === 'motor';
   const hasKva =
     input.load.type === 'transformer' &&
     typeof input.load.kva === 'number' &&
