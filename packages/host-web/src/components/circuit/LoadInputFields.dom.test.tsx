@@ -19,14 +19,13 @@ describe('LoadInputFields (CR-OQ-1)', () => {
     expect(screen.queryByTestId('load-kva')).toBeNull();
   });
 
-  it('motor: shows FLA primary, hides standalone P_kW field', () => {
+  it('motor: shows FLA primary and visible Motor power kW fallback', () => {
     render(
       <LoadInputFields values={{ ...baseValues, loadType: 'motor' }} onChange={() => {}} />,
     );
-    expect(screen.getByTestId('load-fla')).toBeInTheDocument();
+    expect(screen.getByLabelText('Motor FLA (A)')).toBeVisible();
     expect(screen.queryByTestId('load-powerkw')).toBeNull();
-    // P_kW remains accessible in the fallback details.
-    expect(screen.getByTestId('load-powerkw-fallback')).toBeInTheDocument();
+    expect(screen.getByLabelText('Motor power (kW)')).toBeVisible();
   });
 
   it('motor: clearing FLA emits fla=null (no implicit 0 default)', () => {
@@ -59,6 +58,16 @@ describe('LoadInputFields (CR-OQ-1)', () => {
     const kva = screen.getByTestId('load-kva') as HTMLInputElement;
     fireEvent.change(kva, { target: { value: '500' } });
     expect(onChange).toHaveBeenLastCalledWith({ kva: 500 });
+  });
+
+  it('motor: editing Motor power kW emits powerKW patch for engine fallback', () => {
+    const onChange = vi.fn();
+    render(
+      <LoadInputFields values={{ ...baseValues, loadType: 'motor' }} onChange={onChange} />,
+    );
+    const motorPower = screen.getByLabelText('Motor power (kW)') as HTMLInputElement;
+    fireEvent.change(motorPower, { target: { value: '37' } });
+    expect(onChange).toHaveBeenLastCalledWith({ powerKW: 37 });
   });
 
   it('emits loadType patch on type change', async () => {

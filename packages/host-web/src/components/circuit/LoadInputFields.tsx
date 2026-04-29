@@ -50,20 +50,17 @@ export function LoadInputFields({ values, onChange }: Props): React.ReactElement
       {loadType === 'motor' && (
         <>
           <NullableNumField
-            label="FLA (A)"
+            label="Motor FLA (A)"
             value={values.fla}
             onChange={(n) => onChange({ fla: n })}
             testId="load-fla"
           />
-          <details className="advanced">
-            <summary>Power input fallback</summary>
-            <NumField
-              label="Power (kW) — used if FLA unavailable"
-              value={values.powerKW}
-              onChange={(n) => onChange({ powerKW: n })}
-              testId="load-powerkw-fallback"
-            />
-          </details>
+          <NumField
+            label="Motor power (kW)"
+            value={values.powerKW}
+            onChange={(n) => onChange({ powerKW: n })}
+            testId="load-powerkw-fallback"
+          />
         </>
       )}
 
