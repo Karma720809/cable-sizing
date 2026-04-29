@@ -1,0 +1,16 @@
+{
+  "id": "MIG-TC-04b",
+  "description": "Patch-1 core: legacy_preserved with even one CSA step difference must report identical=false (tolerance = 0).",
+  "target": "checkEquivalence",
+  "spec": "Design_Change_LV_v1.3 §12.6 / AC-14",
+  "args": {
+    "legacyResult": { "recommendedCsaMm2": 70 },
+    "newResult": { "recommendedCsaMm2": 95 },
+    "mode": "legacy_preserved"
+  },
+  "expected": {
+    "identical": false,
+    "toleranceUsed": 0,
+    "divergenceReasonContains": "exact match"
+  }
+}

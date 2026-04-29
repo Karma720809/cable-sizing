@@ -1,0 +1,20 @@
+{
+  "id": "GC-LV-03",
+  "description": "5 kW / 400 V / L=20 m / Isc=22 kA / t=0.1 s — short-circuit governs.",
+  "spec": "TC-003",
+  "input": {
+    "load": { "type": "general", "powerKW": 5, "powerFactor": 0.85, "efficiency": 0.9, "demandFactor": 1.0 },
+    "system": { "voltageV": 400, "phase": 3, "frequencyHz": 50 },
+    "cable": { "conductorMaterial": "Cu", "insulationType": "PVC", "coreConfiguration": "3C+N", "cableType": "multicore" },
+    "installation": { "methodCode": "C", "ambientTempC": 30, "soilResistivityK_m_W": null, "groupCount": 1 },
+    "route": { "lengthM": 20 },
+    "protection": { "deviceType": "MCCB", "ratedCurrentA": 20, "operatingCurrentI2A": 29, "tripTimeS": 0.1, "shortCircuitKA": 22 },
+    "projectPolicy": { "maxVoltageDropPercent": 5, "useReactance": false, "resistanceModel": "fixed_reference", "roundingPolicy": "next_standard_csa" }
+  },
+  "expected": {
+    "designCurrentApprox": 9.43,
+    "designCurrentTolerance": 0.1,
+    "overallStatus": "PASS",
+    "recommendedCSAmm2": 70
+  }
+}

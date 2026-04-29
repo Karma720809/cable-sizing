@@ -1,0 +1,22 @@
+{
+  "id": "GC-LV-AUTO-03",
+  "description": "Auto IB from transformer kVA (3-phase): load.type=transformer + load.kva → designCurrent.source=auto_formula, formula=IB_3PH_KVA.",
+  "spec": "Implementation_Spec_LV_v2.0 §3.1 / CR-OQ-1 / AC-2",
+  "input": {
+    "load": { "type": "transformer", "powerKW": null, "kva": 250, "powerFactor": null, "efficiency": null, "demandFactor": 1.0 },
+    "system": { "voltageV": 400, "phase": 3, "frequencyHz": 50 },
+    "cable": { "conductorMaterial": "Cu", "insulationType": "XLPE", "coreConfiguration": "3C", "cableType": "multicore" },
+    "installation": { "methodCode": "E", "ambientTempC": 30, "soilResistivityK_m_W": null, "groupCount": 1 },
+    "route": { "lengthM": 30 },
+    "protection": { "deviceType": "MCCB", "ratedCurrentA": 400, "operatingCurrentI2A": 580, "tripTimeS": 0.1, "shortCircuitKA": 25 },
+    "projectPolicy": { "maxVoltageDropPercent": 5, "useReactance": false, "resistanceModel": "fixed_reference", "roundingPolicy": "next_standard_csa" }
+  },
+  "expected": {
+    "designCurrentApprox": 360.84,
+    "designCurrentTolerance": 0.05,
+    "fieldStates": {
+      "designCurrent": { "source": "auto_formula", "status": "valid", "formula": "IB_3PH_KVA" }
+    },
+    "overallStatusOneOf": ["PASS", "WARNING"]
+  }
+}

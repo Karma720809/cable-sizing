@@ -1,0 +1,22 @@
+{
+  "id": "GC-LV-AUTO-02",
+  "description": "Auto IB from motor FLA: load.type=motor + load.fla → designCurrent.source=auto_formula, formula=IB_FLA.",
+  "spec": "Implementation_Spec_LV_v2.0 §3.1 / CR-OQ-1 / AC-2",
+  "input": {
+    "load": { "type": "motor", "powerKW": null, "fla": 70, "powerFactor": 0.88, "efficiency": 0.92, "demandFactor": 1.0 },
+    "system": { "voltageV": 400, "phase": 3, "frequencyHz": 50 },
+    "cable": { "conductorMaterial": "Cu", "insulationType": "XLPE", "coreConfiguration": "3C", "cableType": "multicore" },
+    "installation": { "methodCode": "E", "ambientTempC": 30, "soilResistivityK_m_W": null, "groupCount": 1 },
+    "route": { "lengthM": 60 },
+    "protection": { "deviceType": "MCCB", "ratedCurrentA": 100, "operatingCurrentI2A": 145, "tripTimeS": 0.1, "shortCircuitKA": 10 },
+    "projectPolicy": { "maxVoltageDropPercent": 5, "useReactance": false, "resistanceModel": "fixed_reference", "roundingPolicy": "next_standard_csa" }
+  },
+  "expected": {
+    "designCurrentApprox": 70.0,
+    "designCurrentTolerance": 0.001,
+    "fieldStates": {
+      "designCurrent": { "source": "auto_formula", "status": "valid", "formula": "IB_FLA" }
+    },
+    "overallStatusOneOf": ["PASS", "WARNING"]
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "id": "MIG-TC-02c",
+  "description": "Patch-1: sufficient inputs + legacy K + user approved → recalculated (auto_dataset).",
+  "target": "applyCorrectionFactorPolicy",
+  "spec": "Design_Change_LV_v1.3 §12.3 / AC-13",
+  "args": {
+    "legacyKValues": { "k1": 0.91, "k2": 0.85, "kTotal": 0.7735 },
+    "sufficientInputsForRecalc": true,
+    "userApproved": true,
+    "recalculatedBundle": { "k1": 0.96, "k2": 0.85, "kTotal": 0.816 }
+  },
+  "expected": {
+    "source": "auto_dataset",
+    "value": { "k1": 0.96, "k2": 0.85, "kTotal": 0.816 },
+    "datasetRef": "iec60364_lv_v1.corrections.<recalculated>"
+  }
+}

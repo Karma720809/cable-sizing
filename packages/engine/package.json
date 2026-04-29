@@ -1,6 +1,6 @@
 {
   "name": "@cable-sizing/engine",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": "IEC 60364-5-52 LV + KEPCO 22.9kV MV power cable sizing engine (pure TypeScript).",
   "type": "module",
   "main": "./dist/index.js",

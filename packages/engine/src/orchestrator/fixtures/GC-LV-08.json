@@ -1,0 +1,18 @@
+{
+  "id": "GC-LV-08",
+  "description": "PF/η/df/ambient/group all null → defaults resolver fills, emits W-DEFAULT-APPLIED.",
+  "spec": "TC-008",
+  "input": {
+    "load": { "type": "general", "powerKW": 25, "powerFactor": null, "efficiency": null, "demandFactor": null },
+    "system": { "voltageV": 400, "phase": 3, "frequencyHz": 50 },
+    "cable": { "conductorMaterial": "Cu", "insulationType": "PVC", "coreConfiguration": "3C+N", "cableType": "multicore" },
+    "installation": { "methodCode": "C", "ambientTempC": null, "soilResistivityK_m_W": null, "groupCount": null },
+    "route": { "lengthM": 50 },
+    "protection": { "deviceType": "MCB", "ratedCurrentA": 50, "operatingCurrentI2A": 72.5, "tripTimeS": 0.1, "shortCircuitKA": 10 },
+    "projectPolicy": { "maxVoltageDropPercent": 5, "useReactance": false, "resistanceModel": "fixed_reference", "roundingPolicy": "next_standard_csa" }
+  },
+  "expected": {
+    "overallStatus": "WARNING",
+    "warningCodes": ["W-DEFAULT-APPLIED"]
+  }
+}

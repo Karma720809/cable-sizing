@@ -5,13 +5,41 @@
  *   §7  CircuitInput
  *   §12 SizingResult / AuditStep / Warning / EngineError
  *   §16 Error/Warning codes
+ *
+ * Also re-exports FieldState model from ./field-state.ts (LV v1.3 / Stage A).
  */
+
+export type {
+  FieldSource,
+  FieldStatus,
+  FieldReason,
+  FieldState,
+  DerivedFieldRecord,
+  InfoCode,
+  InfoMessage,
+} from './field-state.js';
+export { FieldStateBuilder } from './field-state.js';
+
+import type {
+  FieldState,
+  DerivedFieldRecord,
+  InfoMessage,
+} from './field-state.js';
 
 // ─────────────────────────────────────────────────────────────────────
 // Input
 // ─────────────────────────────────────────────────────────────────────
 
-export type LoadType = 'general' | 'motor' | 'heater' | 'lighting';
+/**
+ * 4-bus topology classification used by the v1.3 loadedConductors
+ * derivation table. Optional in CircuitInput — when omitted, the
+ * engine continues to use {@link CircuitInput.system.phase} as before.
+ *
+ * Spec: Design_Change_LV_Cable_Sizing_Input_Automation_v1.3_FINAL §6.2.
+ */
+export type Topology = '1ph2w' | '1ph3w' | '3ph3w' | '3ph4w';
+
+export type LoadType = 'general' | 'motor' | 'heater' | 'lighting' | 'transformer';
 export type Phase = 1 | 3;
 export type FrequencyHz = 50 | 60;
 
@@ -25,6 +53,14 @@ export type ReferenceMethod = 'A1' | 'A2' | 'B1' | 'B2' | 'C' | 'D1' | 'D2' | 'E
 
 export type ProtectiveDevice = 'MCB' | 'MCCB' | 'Fuse' | 'UserDefined';
 
+/**
+ * v1.3 (Stage B): armour cladding for armoured LV cables. When unset or
+ * 'none', armour processing is skipped. SWA = Steel Wire Armour, STA =
+ * Steel Tape Armour. Stage B ships the SWA dataset (BS 5467 placeholder);
+ * STA is reserved for a later dataset addition.
+ */
+export type ArmourType = 'SWA' | 'STA' | 'none';
+
 export type ResistanceModel = 'fixed_reference' | 'temperature_corrected';
 export type RoundingPolicy = 'next_standard_csa';
 
@@ -37,17 +73,43 @@ export interface CircuitInput {
     demandFactor: number | null;
     /** OQ-5: if provided, overrides load-based design current calc (WARNING emitted). */
     designCurrentOverrideA?: number | null;
+    /**
+     * v1.3 Stage B: motor full-load amperes (FLA). When `type === 'motor'`
+     * and `fla` is present, the design-current derivation uses FLA · df
+     * directly instead of the powerKW formula (CR-OQ-1).
+     */
+    fla?: number | null;
+    /**
+     * v1.3 Stage B: transformer kVA rating. When `type === 'transformer'`
+     * the derivation uses IB = (kVA·1000) / (√3·V) · df (3-phase) or
+     * IB = (kVA·1000) / V · df (1-phase). powerKW/cosφ/η are ignored.
+     */
+    kva?: number | null;
   };
   system: {
     voltageV: number;
     phase: Phase;
     frequencyHz: FrequencyHz;
+    /**
+     * v1.3 (Stage A, optional): 4-bus topology used by the loadedConductors
+     * derivation table. When provided, takes precedence over `phase` in the
+     * Stage B `loadedConductors` derivation (Stage A: ignored, additive).
+     * When absent, the existing `phase` field remains authoritative — keeps
+     * all 12 LV golden cases byte-equivalent.
+     */
+    topology?: Topology;
   };
   cable: {
     conductorMaterial: ConductorMaterial;
     insulationType: InsulationType;
     coreConfiguration: CoreConfiguration;
     cableType: CableType;
+    /**
+     * v1.3 Stage B (optional): SWA / STA armour type. Unset or 'none'
+     * skips armour processing. When 'SWA' or 'STA', the pipeline runs
+     * an armour CSA lookup + short-circuit verification.
+     */
+    armourType?: ArmourType;
   };
   installation: {
     methodCode: ReferenceMethod;
@@ -74,6 +136,49 @@ export interface CircuitInput {
     /** OQ-4: MVP is fixed to 'fixed_reference'. */
     resistanceModel: ResistanceModel;
     roundingPolicy: RoundingPolicy;
+  };
+
+  /**
+   * v1.3 (Stage A, optional): explicit user overrides for fields the engine
+   * normally derives. Stage B will read this and emit W-CR-001 / W-CR-005 /
+   * W-CR-004 when overrides are applied. Stage A: schema-only, no behavior.
+   *
+   * Coexists with the legacy `load.designCurrentOverrideA` field — Stage B
+   * will define precedence (overrides > legacy → emit deprecation W-CR-006).
+   *
+   * Spec: §6.1, §6.2, §6.7; Implementation_Spec_LV_v2.0 §2.2.
+   */
+  overrides?: {
+    designCurrent?: number;
+    loadedConductors?: number;
+    armourCsaMm2?: number;
+  };
+
+  /**
+   * v1.3 (Stage A, optional): "neutral carries current" toggle for
+   * unbalanced / single-phase-on-3φ4w loads. Stage B's loadedConductors
+   * derivation flips 3 → 4 when this is true on a 3ph4w topology, and
+   * 2 → 3 on 1ph3w. Stage A: ignored.
+   *
+   * Spec: §6.2 (CR-OQ-3).
+   */
+  neutralCarriesCurrent?: boolean;
+
+  /**
+   * v1.3 migration namespace — quarantined from regular CircuitInput
+   * fields. New user-authored inputs MUST NOT populate this; it is
+   * reserved for v1.x → v1.5 project migration (see migration/*).
+   *
+   * Spec: §12.3 Patch-1.
+   */
+  _migration?: {
+    recalculateLegacyCorrectionFactors?: boolean;
+    legacyCorrectionFactors?: {
+      k1?: number;
+      k2?: number;
+      k3?: number;
+      kTotal?: number;
+    };
   };
 }
 
@@ -213,6 +318,25 @@ export interface SizingResult {
   /** Phase 4A.3: kept separate from engineVersion so UI contracts evolve independently. */
   apiVersion: number;
   auditTrail: AuditStep[];
+  /**
+   * v1.3 sidecar (Stage A, optional). Map of `fieldId → FieldState` for
+   * every derived value the pipeline chose to record. UI consumers
+   * render this via DerivedFieldDisplay; pre-v1.3 consumers ignore it.
+   *
+   * Stage A: never populated (additive contract only).
+   * Stage B: populated by derivation/* modules.
+   *
+   * Worker envelope outer shape unchanged — Adjustment-3 satisfied by
+   * extending SizingResult, which is already nested inside `data.result`.
+   */
+  fieldStates?: Record<string, FieldState>;
+  /**
+   * v1.3 informational message channel (Stage A, optional). Severity
+   * lower than Warning; used for non-blocking observations such as
+   * I-CR-001 (neutral-carries-current promoted loadedConductors).
+   * Stage A: never populated.
+   */
+  info?: InfoMessage[];
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -240,6 +364,15 @@ export interface AuditStep {
   decision: Decision;
   reason: string;
   code?: string;
+  /**
+   * v1.3 (Stage A, optional). Per-step provenance records for derived
+   * values produced by this step. Lets UI panels render "📊 R = 0.193
+   * Ω/km (auto_dataset · iec60364_lv_v1.impedance.cuMulticore50)"
+   * without scraping the `intermediateValues` map.
+   *
+   * Stage A: never populated. Stage B: derivation modules emit this.
+   */
+  derivedFields?: DerivedFieldRecord[];
 }
 
 export interface Warning {
@@ -294,6 +427,15 @@ export type ErrorCode =
   | 'E-MV-LOOKUP-008' // MV burial depth out of range
   | 'E-MV-CSA-001' // MV required csa exceeds maximum standard size
   | 'E-MV-DATA-001' // MV dataset quality check failed
+  // ── LV v1.3 input-automation (Stage A: declared, Stage B: emitted) ──
+  /**
+   * Soil resistivity is a required input for underground installation
+   * methods (CR-OQ-5, "구분 정책"). Distinct from the legacy E-VAL-003
+   * which fires during structural validation; E-CR-101 is emitted by
+   * the v1.3 derivation step and carries the FieldState reason
+   * `missing_input`.
+   */
+  | 'E-CR-101'
   /**
    * Added in Stage 5C (engine 0.10.0).
    *
@@ -396,7 +538,36 @@ export type WarningCode =
   | 'W-MV-SCREEN-AUTO-FILLED'
   | 'W-MV-SCREEN-OVERRIDE'
   | 'W-MV-SCREEN-INCOMPLETE'
-  | 'W-MV-PROTECTION-DISCLAIMER';
+  | 'W-MV-PROTECTION-DISCLAIMER'
+  // ── LV v1.3 input-automation (Stage A: declared, Stage B: emitted) ──
+  /** Manual override applied to design current I_B (CR-OQ-1). */
+  | 'W-CR-001'
+  /** Ambient temperature not provided; default 30°C applied (CR-OQ-5). */
+  | 'W-CR-002'
+  /** Burial depth not provided; default 0.7 m applied (CR-OQ-5). */
+  | 'W-CR-003'
+  /** Manual override applied to armour CSA (CR-OQ-7). */
+  | 'W-CR-004'
+  /** Manual override applied to loadedConductors (CR-OQ-3). */
+  | 'W-CR-005'
+  /**
+   * Legacy `load.designCurrentOverrideA` is set; new code should use
+   * `overrides.designCurrent` instead. Both are honoured for one
+   * release window during the v1.3 migration.
+   */
+  | 'W-CR-006'
+  /**
+   * Armour CSA short-circuit verification failed (selected armour
+   * cannot withstand the fault current for the cleared time).
+   */
+  | 'W-CR-007'
+  /**
+   * loadedConductors derivation produced 4 (3-phase 4-wire with
+   * neutral carrying current); ampacity dataset only has 2-/3-loaded
+   * tables, so 3-loaded was used. Harmonic / 4-loaded derating
+   * (k4) is explicitly out of scope per §6.2 (CR-OQ-3).
+   */
+  | 'W-CR-008';
 
 // ─────────────────────────────────────────────────────────────────────
 // Dataset shape (matches iec60364_lv_v1 on disk)
@@ -543,6 +714,34 @@ export interface KValuesDataset {
 }
 
 /**
+ * v1.3 Stage B — armour CSA dataset for armoured LV cables.
+ *
+ * Each entry maps a `(cableConstruction, conductorCsaMm2)` key to the
+ * armour cross-sectional area (mm²). `kArmour` is per-dataset (constant
+ * for SWA, constant for STA) per IEC 60364-5-54 Annex A.
+ *
+ * Stage B ships the SWA bundle with BS 5467 placeholder values; the
+ * dataset's `meta.status` is `'draft'` until validated against an
+ * authoritative source.
+ */
+export interface ArmourEntry {
+  cableConstruction: string;
+  conductorCsaMm2: number;
+  armourCsaMm2: number;
+}
+
+export interface ArmourDataset {
+  schemaVersion: string;
+  datasetId: string;
+  sourceRef: string;
+  status: 'draft' | 'approved';
+  armourType: 'SWA' | 'STA';
+  /** k value applied to armour SC verification (steel ≈ 51, IEC 60364-5-54 A.54.6). */
+  kArmour: number;
+  entries: ArmourEntry[];
+}
+
+/**
  * Stage 5C — temperature coefficient of resistance (α) at the reference
  * temperature, per conductor material.
  *
@@ -594,6 +793,14 @@ export interface Dataset {
     cuMulticore50: ImpedanceDataset;
   };
   shortCircuit: { kValues: KValuesDataset };
+  /**
+   * v1.3 Stage B (optional). Bundled armour CSA tables. Currently SWA
+   * only (BS 5467 placeholder, status='draft'); STA reserved.
+   */
+  armour?: {
+    swa?: ArmourDataset;
+    sta?: ArmourDataset;
+  };
   /**
    * Stage 5C (engine 0.10.0). Temperature coefficient of resistance
    * bundle, used only when `projectPolicy.resistanceModel ===

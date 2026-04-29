@@ -1,0 +1,40 @@
+{
+  "id": "MIG-TC-01",
+  "description": "Source mapping (Patch-2): Manual fields → user, Auto+Override fields → override.",
+  "target": "migrateLegacyInput",
+  "spec": "Design_Change_LV_v1.3 §13.3 MIG-TC-01 / AC-15",
+  "legacyInput": {
+    "schemaVersion": "v1.2",
+    "voltage": 415,
+    "phase": 3,
+    "topology": "3ph4w",
+    "powerKW": 440,
+    "powerFactor": 0.85,
+    "length": 50,
+    "ambientTemp": 30,
+    "groupCount": 1,
+    "designCurrent": 720,
+    "loadedConductors": 4,
+    "armourCsaMm2": 95
+  },
+  "options": {},
+  "expected": {
+    "fieldChanges": [
+      { "fieldId": "voltage", "newSource": "user" },
+      { "fieldId": "phase", "newSource": "user" },
+      { "fieldId": "topology", "newSource": "user" },
+      { "fieldId": "powerKW", "newSource": "user" },
+      { "fieldId": "powerFactor", "newSource": "user" },
+      { "fieldId": "length", "newSource": "user" },
+      { "fieldId": "ambientTemp", "newSource": "user" },
+      { "fieldId": "groupCount", "newSource": "user" },
+      { "fieldId": "designCurrent", "newSource": "override" },
+      { "fieldId": "loadedConductors", "newSource": "override" },
+      { "fieldId": "armourCsaMm2", "newSource": "override" }
+    ],
+    "autoOverrideHaveNote": ["designCurrent", "loadedConductors", "armourCsaMm2"],
+    "discardedFieldCount": 0,
+    "userApprovalRequired": false,
+    "fromVersion": "v1.2"
+  }
+}

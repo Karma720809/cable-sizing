@@ -45,23 +45,43 @@ export function validateCircuitInput(input: CircuitInput): EngineError[] {
   }
 
   // E-VAL-004 / E-VAL-002 / E-VAL-008
-  const hasOverride =
+  const hasNewOverride =
+    input.overrides?.designCurrent != null && input.overrides.designCurrent > 0;
+  const hasLegacyOverride =
     input.load.designCurrentOverrideA != null && input.load.designCurrentOverrideA > 0;
-  if (!hasOverride) {
+  const hasOverride = hasNewOverride || hasLegacyOverride;
+  // v1.3 Stage B: transformer/motor get alternate "load specified" sources.
+  const hasFla =
+    input.load.type === 'motor' &&
+    typeof input.load.fla === 'number' &&
+    input.load.fla > 0;
+  const hasKva =
+    input.load.type === 'transformer' &&
+    typeof input.load.kva === 'number' &&
+    input.load.kva > 0;
+  const hasLoadSpec = hasOverride || hasFla || hasKva;
+  if (!hasLoadSpec) {
     if (input.load.powerKW == null || !(input.load.powerKW > 0)) {
-      push(errors, 'E-VAL-004', 'powerKW must be provided (or use designCurrentOverrideA)', 'load.powerKW');
+      push(
+        errors,
+        'E-VAL-004',
+        'powerKW must be provided (or use FLA / kVA / designCurrentOverrideA / overrides.designCurrent)',
+        'load.powerKW',
+      );
     }
-    // powerFactor (0, 1] — null is allowed (defaults resolver will fill it)
+  }
+  // PF/η/df range checks always run, but only when caller bothered to set
+  // them (null is fine — defaults will fill, transformer/override paths
+  // simply ignore).
+  if (!hasOverride) {
     const pf = input.load.powerFactor;
     if (pf != null && (!(pf > 0) || pf > 1)) {
       push(errors, 'E-VAL-002', 'powerFactor must be in (0, 1]', 'load.powerFactor');
     }
-    // efficiency (0, 1] — null allowed (defaulted)
     const eta = input.load.efficiency;
     if (eta != null && (!(eta > 0) || eta > 1)) {
       push(errors, 'E-VAL-008', 'efficiency must be in (0, 1]', 'load.efficiency');
     }
-    // demandFactor (0, 1] — null allowed (defaulted)
     const df = input.load.demandFactor;
     if (df != null && (!(df > 0) || df > 1)) {
       push(errors, 'E-VAL-008', 'demandFactor must be in (0, 1]', 'load.demandFactor');

@@ -1,0 +1,18 @@
+{
+  "id": "GC-LV-12",
+  "description": "Ambient 33 °C between tabulated 30/35 → safe-side neighbour, W-LOOKUP-SAFE-SIDE.",
+  "spec": "TC-012",
+  "input": {
+    "load": { "type": "general", "powerKW": 25, "powerFactor": 0.85, "efficiency": 0.9, "demandFactor": 1.0 },
+    "system": { "voltageV": 400, "phase": 3, "frequencyHz": 50 },
+    "cable": { "conductorMaterial": "Cu", "insulationType": "PVC", "coreConfiguration": "3C+N", "cableType": "multicore" },
+    "installation": { "methodCode": "C", "ambientTempC": 33, "soilResistivityK_m_W": null, "groupCount": 1 },
+    "route": { "lengthM": 50 },
+    "protection": { "deviceType": "MCB", "ratedCurrentA": 50, "operatingCurrentI2A": 72.5, "tripTimeS": 0.1, "shortCircuitKA": 10 },
+    "projectPolicy": { "maxVoltageDropPercent": 5, "useReactance": false, "resistanceModel": "fixed_reference", "roundingPolicy": "next_standard_csa" }
+  },
+  "expected": {
+    "overallStatus": "WARNING",
+    "warningCodes": ["W-LOOKUP-SAFE-SIDE"]
+  }
+}

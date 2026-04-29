@@ -34,14 +34,14 @@ import type {
   Dataset,
   SelectionDriver,
   FrequencyHz,
+  FieldState,
+  InfoMessage,
 } from '../types/index.js';
 import { loadDataset } from '../data/loader.js';
 import { ENGINE_VERSION } from '../version.js';
 import { API_VERSION } from '../api/manifest.js';
-import { designCurrent } from '../physics/current.js';
 import { voltageDrop } from '../physics/voltage-drop.js';
 import { shortCircuitCSA } from '../physics/short-circuit.js';
-import { computeCorrections } from '../standards/iec60364/corrections.js';
 import {
   resolveAmpacityRows,
   selectCsaForRequiredIz,
@@ -58,6 +58,11 @@ import { nextStandardAtLeast } from '../utils/lookup.js';
 import { validateCircuitInput } from './validation.js';
 import { applyDefaults } from './defaults.js';
 import { AuditBuilder } from './audit.js';
+// v1.3 Stage B — derivation modules emit FieldState provenance.
+import { deriveDesignCurrent } from '../derivation/design-current.js';
+import { deriveLoadedConductors } from '../derivation/loaded-conductors.js';
+import { deriveCorrectionFactors } from '../derivation/correction-factors.js';
+import { deriveArmour } from '../derivation/armour.js';
 
 // ─── public options ─────────────────────────────────────────────────
 
@@ -119,9 +124,14 @@ function buildSkeleton(
   auditTrail: ReturnType<AuditBuilder['build']>,
   designCurrentA: number,
   datasetId: string,
-  opts?: { maxDropPercent?: number; overall?: OverallStatus },
+  opts?: {
+    maxDropPercent?: number;
+    overall?: OverallStatus;
+    fieldStates?: Record<string, FieldState>;
+    info?: InfoMessage[];
+  },
 ): SizingResult {
-  return {
+  const result: SizingResult = {
     designCurrentA,
     ampacity: emptyAmpacity(),
     voltageDrop: emptyVoltageDrop(opts?.maxDropPercent ?? 0),
@@ -137,6 +147,14 @@ function buildSkeleton(
     apiVersion: API_VERSION,
     auditTrail,
   };
+  // v1.3 Stage B — populate sidecar maps when we have anything to report.
+  if (opts?.fieldStates && Object.keys(opts.fieldStates).length > 0) {
+    result.fieldStates = opts.fieldStates;
+  }
+  if (opts?.info && opts.info.length > 0) {
+    result.info = opts.info;
+  }
+  return result;
 }
 
 // ─── orchestrator ───────────────────────────────────────────────────
@@ -146,6 +164,10 @@ export function sizeCable(input: CircuitInput, options: SizeCableOptions = {}): 
   const audit = new AuditBuilder();
   const warnings: Warning[] = [];
   const errors: EngineError[] = [];
+  // v1.3 Stage B — sidecar accumulators. Stage A reserved these as
+  // optional fields on SizingResult; Stage B turns them on.
+  const fieldStates: Record<string, FieldState> = {};
+  const info: InfoMessage[] = [];
 
   // ── Step 1: validation ────────────────────────────────────────────
   const vErrors = validateCircuitInput(input);
@@ -217,74 +239,63 @@ export function sizeCable(input: CircuitInput, options: SizeCableOptions = {}): 
         audit.build(),
         0,
         dataset.meta.datasetId,
-        { maxDropPercent: resolved.projectPolicy.maxVoltageDropPercent },
+        {
+          maxDropPercent: resolved.projectPolicy.maxVoltageDropPercent,
+          fieldStates,
+          info,
+        },
       );
     }
   }
 
-  // ── Step 3: design current ────────────────────────────────────────
-  let ibA: number;
-  const override = resolved.load.designCurrentOverrideA;
-  if (override != null && override > 0) {
-    ibA = override;
-    warnings.push({
-      code: 'W-IB-OVERRIDE',
-      message: `designCurrent overridden to ${override} A (load params ignored)`,
-      field: 'load.designCurrentOverrideA',
-    });
+  // ── Step 3: design current (v1.3 Stage B — derivation module) ────
+  const dcRes = deriveDesignCurrent(resolved);
+  if (dcRes.warnings.length > 0) warnings.push(...dcRes.warnings);
+  fieldStates.designCurrent = dcRes.state;
+  if (dcRes.designCurrentA == null) {
+    // Should be unreachable given validation + defaults; emit a structural
+    // INCOMPLETE so the audit captures it.
     audit.add({
       criterion: 'designCurrent',
-      inputs: { overrideA: override },
-      formula: 'IB = designCurrentOverrideA',
-      intermediateValues: { IB: ibA },
-      decision: 'WARNING',
-      reason: 'override path active (OQ-5); load parameters bypassed',
-      code: 'W-IB-OVERRIDE',
+      inputs: { state: dcRes.state },
+      formula: dcRes.state.formula ?? 'derivation',
+      intermediateValues: dcRes.intermediate,
+      decision: 'INCOMPLETE',
+      reason: dcRes.state.reason ?? 'design current could not be derived',
     });
-  } else {
-    // Guaranteed present by validation + defaults
-    const { designCurrentA: ib, intermediate } = designCurrent({
-      powerKW: resolved.load.powerKW as number,
-      voltageV: resolved.system.voltageV,
-      phase: resolved.system.phase,
-      powerFactor: resolved.load.powerFactor as number,
-      efficiency: resolved.load.efficiency as number,
-      demandFactor: resolved.load.demandFactor as number,
-    });
-    ibA = ib;
-    audit.add({
-      criterion: 'designCurrent',
-      inputs: {
-        powerKW: resolved.load.powerKW,
-        voltageV: resolved.system.voltageV,
-        phase: resolved.system.phase,
-        powerFactor: resolved.load.powerFactor,
-        efficiency: resolved.load.efficiency,
-        demandFactor: resolved.load.demandFactor,
-      },
-      formula:
-        resolved.system.phase === 3
-          ? 'IB = (P·1000) / (√3·V·cosφ·η) · df'
-          : 'IB = (P·1000) / (V·cosφ·η) · df',
-      intermediateValues: { ...intermediate, IB: ib },
-      decision: 'INFO',
-      reason: 'computed from load parameters',
+    return buildSkeleton(errors, warnings, audit.build(), 0, dataset.meta.datasetId, {
+      maxDropPercent: resolved.projectPolicy.maxVoltageDropPercent,
+      fieldStates,
+      info,
     });
   }
-
-  // ── Step 4: correction factors ────────────────────────────────────
-  const corr = computeCorrections(dataset, {
-    method: resolved.installation.methodCode,
-    insulation: resolved.cable.insulationType,
-    ambientTempC: resolved.installation.ambientTempC as number,
-    soilResistivityK_m_W: resolved.installation.soilResistivityK_m_W ?? null,
-    groupCount: resolved.installation.groupCount as number,
+  const ibA: number = dcRes.designCurrentA;
+  const dcDecision =
+    dcRes.state.source === 'override' ? 'WARNING' : 'INFO';
+  audit.add({
+    criterion: 'designCurrent',
+    inputs: dcRes.intermediate,
+    formula: dcRes.state.formula ?? 'IB = override',
+    intermediateValues: { IB: ibA, source: dcRes.state.source },
+    decision: dcDecision,
+    reason:
+      dcRes.state.source === 'override'
+        ? 'override path active (load parameters bypassed)'
+        : 'computed from load parameters',
+    ...(dcRes.warnings[0] ? { code: dcRes.warnings[0].code } : {}),
   });
-  if (!corr.ok) {
+
+  // ── Step 4: correction factors (v1.3 Stage B — derivation module) ──
+  const cfRes = deriveCorrectionFactors(resolved, dataset);
+  fieldStates.k1 = cfRes.fieldStates.k1;
+  fieldStates.k2 = cfRes.fieldStates.k2;
+  fieldStates.k3 = cfRes.fieldStates.k3;
+  fieldStates.kTotal = cfRes.fieldStates.kTotal;
+  if (cfRes.error) {
     const err: EngineError = {
-      code: corr.error.code,
-      message: corr.error.message,
-      field: corr.error.field,
+      code: cfRes.error.code,
+      message: cfRes.error.message,
+      field: cfRes.error.field,
       fatal: true,
     };
     errors.push(err);
@@ -294,12 +305,16 @@ export function sizeCable(input: CircuitInput, options: SizeCableOptions = {}): 
       formula: 'k_total = k1·k2·k3',
       intermediateValues: {},
       decision: 'FAIL',
-      reason: corr.error.message,
-      code: corr.error.code,
+      reason: cfRes.error.message,
+      code: cfRes.error.code,
     });
-    return buildSkeleton(errors, warnings, audit.build(), ibA, dataset.meta.datasetId);
+    return buildSkeleton(errors, warnings, audit.build(), ibA, dataset.meta.datasetId, {
+      maxDropPercent: resolved.projectPolicy.maxVoltageDropPercent,
+      fieldStates,
+      info,
+    });
   }
-  const { combined } = corr;
+  const combined = cfRes.combined!;
   if (combined.warningCode) {
     warnings.push({
       code: combined.warningCode,
@@ -333,8 +348,25 @@ export function sizeCable(input: CircuitInput, options: SizeCableOptions = {}): 
   });
 
   // ── Step 5: required IZ' + ampacity lookup ────────────────────────
+  // v1.3 Stage B — derive loadedConductors via topology + neutral toggle.
+  // The ampacity dataset only carries 2- and 3-loaded tables, so a
+  // derivation result of 4 is clamped to 3 for the table lookup, with
+  // W-CR-008 noting that 4-loaded harmonic derating is out of scope.
+  const lcRes = deriveLoadedConductors(resolved);
+  fieldStates.loadedConductors = lcRes.state;
+  if (lcRes.warnings.length > 0) warnings.push(...lcRes.warnings);
+  if (lcRes.info.length > 0) info.push(...lcRes.info);
+  const lcDerived = lcRes.loadedConductors ?? (resolved.system.phase === 1 ? 2 : 3);
+  if (lcDerived === 4) {
+    warnings.push({
+      code: 'W-CR-008',
+      message:
+        'loadedConductors=4 derived (3φ4선 + 중성선 부하); ampacity table clamped to 3-loaded — k4 (harmonic derating) out of v1.3 scope',
+      field: 'system.topology',
+    });
+  }
+  const loadedConductorsUsed: 2 | 3 = (lcDerived >= 3 ? 3 : 2) as 2 | 3;
   const requiredIz = ibA / combined.total;
-  const loadedConductorsUsed: 2 | 3 = resolved.system.phase === 1 ? 2 : 3;
   const rowsRes = resolveAmpacityRows(dataset, {
     conductorMaterial: resolved.cable.conductorMaterial,
     insulationType: resolved.cable.insulationType,
@@ -355,7 +387,11 @@ export function sizeCable(input: CircuitInput, options: SizeCableOptions = {}): 
       reason: rowsRes.error.message,
       code: rowsRes.error.code,
     });
-    return buildSkeleton(errors, warnings, audit.build(), ibA, dataset.meta.datasetId);
+    return buildSkeleton(errors, warnings, audit.build(), ibA, dataset.meta.datasetId, {
+      maxDropPercent: resolved.projectPolicy.maxVoltageDropPercent,
+      fieldStates,
+      info,
+    });
   }
   const hit = selectCsaForRequiredIz(rowsRes.rows, requiredIz);
   if (!hit) {
@@ -373,7 +409,11 @@ export function sizeCable(input: CircuitInput, options: SizeCableOptions = {}): 
       reason: 'required IZ exceeds largest tabulated ampacity',
       code: 'E-CSA-001',
     });
-    return buildSkeleton(errors, warnings, audit.build(), ibA, dataset.meta.datasetId);
+    return buildSkeleton(errors, warnings, audit.build(), ibA, dataset.meta.datasetId, {
+      maxDropPercent: resolved.projectPolicy.maxVoltageDropPercent,
+      fieldStates,
+      info,
+    });
   }
   const ampacityResult: AmpacityResult = {
     correctionFactors: { k1: combined.k1, k2: combined.k2, k3: combined.k3, total: combined.total },
@@ -659,7 +699,7 @@ export function sizeCable(input: CircuitInput, options: SizeCableOptions = {}): 
       audit.build(),
       ibA,
       dataset.meta.datasetId,
-      { maxDropPercent: maxDrop },
+      { maxDropPercent: maxDrop, fieldStates, info },
     );
   }
   audit.add({
@@ -695,7 +735,11 @@ export function sizeCable(input: CircuitInput, options: SizeCableOptions = {}): 
         reason: kv.error.message,
         code: kv.error.code,
       });
-      return buildSkeleton(errors, warnings, audit.build(), ibA, dataset.meta.datasetId);
+      return buildSkeleton(errors, warnings, audit.build(), ibA, dataset.meta.datasetId, {
+        maxDropPercent: maxDrop,
+        fieldStates,
+        info,
+      });
     }
     const sc = shortCircuitCSA({ shortCircuitA: scA, tripTimeS: tA, kValue: kv.hit.kValue });
     const csaRounded = nextStandardAtLeast(sizes, sc.requiredCSARaw);
@@ -714,7 +758,11 @@ export function sizeCable(input: CircuitInput, options: SizeCableOptions = {}): 
         reason: 'required csa exceeds largest standard size',
         code: 'E-CSA-001',
       });
-      return buildSkeleton(errors, warnings, audit.build(), ibA, dataset.meta.datasetId, { maxDropPercent: maxDrop });
+      return buildSkeleton(errors, warnings, audit.build(), ibA, dataset.meta.datasetId, {
+        maxDropPercent: maxDrop,
+        fieldStates,
+        info,
+      });
     }
     csaSC = csaRounded;
     scResult = {
@@ -750,7 +798,11 @@ export function sizeCable(input: CircuitInput, options: SizeCableOptions = {}): 
   const preRecheckRecommended = recommended;
   if (recommended == null) {
     errors.push({ code: 'E-CSA-001', message: 'recommended csa exceeds standard size range', fatal: true });
-    return buildSkeleton(errors, warnings, audit.build(), ibA, dataset.meta.datasetId, { maxDropPercent: maxDrop });
+    return buildSkeleton(errors, warnings, audit.build(), ibA, dataset.meta.datasetId, {
+      maxDropPercent: maxDrop,
+      fieldStates,
+      info,
+    });
   }
   audit.add({
     criterion: 'recommended',
@@ -859,6 +911,69 @@ export function sizeCable(input: CircuitInput, options: SizeCableOptions = {}): 
     });
   }
 
+  // ── Step 11 (v1.3 Stage B): armour CSA + short-circuit verification ──
+  // Optional. Runs only when `cable.armourType` is set to a non-'none'
+  // value. Armour SC failure emits W-CR-007 (warning, not fatal) — this
+  // is informational only in v1.3; promoting to FAIL is a Stage D-scope
+  // policy decision (TN-S systems where armour is the PE conductor).
+  if (
+    input.cable.armourType &&
+    input.cable.armourType !== 'none' &&
+    recommended !== undefined
+  ) {
+    const armRes = deriveArmour(input, dataset, recommended);
+    fieldStates.armourCsa = armRes.state;
+    if (armRes.warnings.length > 0) warnings.push(...armRes.warnings);
+    if (armRes.armour) {
+      audit.add({
+        criterion: 'shortCircuit',
+        inputs: {
+          armourType: armRes.armour.armourType,
+          cableConstruction: armRes.armour.cableConstruction,
+          conductorCsaMm2: recommended,
+        },
+        formula: 'armour CSA lookup (cableConstruction, conductorCsaMm2)',
+        intermediateValues: {
+          armourCsaMm2: armRes.armour.armourCsaMm2,
+          kArmour: armRes.armour.kArmour,
+          source: armRes.state.source,
+        },
+        decision: 'INFO',
+        reason:
+          armRes.state.source === 'override'
+            ? `armour CSA overridden to ${armRes.armour.armourCsaMm2} mm²`
+            : `armour CSA ${armRes.armour.armourCsaMm2} mm² resolved from ${armRes.armour.sourceRef}`,
+      });
+      if (scA > 0 && tA > 0) {
+        // S_arm_req = sqrt(I_fault² · t) / k_arm = I_fault · √t / k_arm
+        const sArmReq = (scA * Math.sqrt(tA)) / armRes.armour.kArmour;
+        const armPass = armRes.armour.armourCsaMm2 >= sArmReq;
+        if (!armPass) {
+          warnings.push({
+            code: 'W-CR-007',
+            message: `armour CSA ${armRes.armour.armourCsaMm2} mm² insufficient for SC current; required ≥ ${sArmReq.toFixed(2)} mm² (k_arm=${armRes.armour.kArmour})`,
+            field: 'cable.armourType',
+          });
+        }
+        audit.add({
+          criterion: 'shortCircuit',
+          inputs: { Isc: scA, tripTimeS: tA, kArmour: armRes.armour.kArmour },
+          formula: 'S_arm_req = Isc·√t / k_arm',
+          intermediateValues: {
+            requiredArmourCsaMm2: sArmReq,
+            actualArmourCsaMm2: armRes.armour.armourCsaMm2,
+            pass: armPass,
+          },
+          decision: armPass ? 'PASS' : 'WARNING',
+          reason: armPass
+            ? `armour ${armRes.armour.armourCsaMm2} mm² ≥ required ${sArmReq.toFixed(2)} mm²`
+            : `armour SC verification failed (W-CR-007)`,
+          ...(armPass ? {} : { code: 'W-CR-007' }),
+        });
+      }
+    }
+  }
+
   // ── Overall status ────────────────────────────────────────────────
   let overall: OverallStatus;
   const anyFail =
@@ -904,7 +1019,7 @@ export function sizeCable(input: CircuitInput, options: SizeCableOptions = {}): 
     }
   }
 
-  return {
+  const result: SizingResult = {
     designCurrentA: ibA,
     ampacity: ampacityResult,
     voltageDrop: vResult,
@@ -920,6 +1035,11 @@ export function sizeCable(input: CircuitInput, options: SizeCableOptions = {}): 
     apiVersion: API_VERSION,
     auditTrail: audit.build(),
   };
+  // v1.3 Stage B sidecar — populated whenever the pipeline emitted any
+  // FieldState or InfoMessage. Pre-v1.3 consumers ignore these keys.
+  if (Object.keys(fieldStates).length > 0) result.fieldStates = fieldStates;
+  if (info.length > 0) result.info = info;
+  return result;
 }
 
 // Re-exports to keep the orchestrator folder self-contained for callers.

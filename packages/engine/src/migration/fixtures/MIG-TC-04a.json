@@ -1,0 +1,17 @@
+{
+  "id": "MIG-TC-04a",
+  "description": "Patch-1 core: legacy_preserved mode requires exact recommendedCsaMm2 match (tolerance = 0).",
+  "target": "checkEquivalence",
+  "spec": "Design_Change_LV_v1.3 §12.6 / AC-14",
+  "args": {
+    "legacyResult": { "recommendedCsaMm2": 70 },
+    "newResult": { "recommendedCsaMm2": 70 },
+    "mode": "legacy_preserved"
+  },
+  "expected": {
+    "identical": true,
+    "toleranceUsed": 0,
+    "legacyRecommendedCsa": 70,
+    "newRecommendedCsa": 70
+  }
+}

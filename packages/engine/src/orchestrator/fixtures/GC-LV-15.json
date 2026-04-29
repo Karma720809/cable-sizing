@@ -1,0 +1,23 @@
+{
+  "id": "GC-LV-15",
+  "description": "Transformer 160 kVA / 400 V / 3φ — full pipeline including IB_3PH_KVA derivation, recommendedCSAmm2 dimensioned to ampacity.",
+  "spec": "v1.3 Stage B / CR-OQ-1 / load.type=transformer",
+  "input": {
+    "load": { "type": "transformer", "powerKW": null, "kva": 160, "powerFactor": null, "efficiency": null, "demandFactor": 1.0 },
+    "system": { "voltageV": 400, "phase": 3, "frequencyHz": 50 },
+    "cable": { "conductorMaterial": "Cu", "insulationType": "PVC", "coreConfiguration": "3C+N", "cableType": "multicore" },
+    "installation": { "methodCode": "C", "ambientTempC": 30, "soilResistivityK_m_W": null, "groupCount": 1 },
+    "route": { "lengthM": 30 },
+    "protection": { "deviceType": "MCCB", "ratedCurrentA": 250, "operatingCurrentI2A": 362.5, "tripTimeS": 0.1, "shortCircuitKA": 25 },
+    "projectPolicy": { "maxVoltageDropPercent": 5, "useReactance": false, "resistanceModel": "fixed_reference", "roundingPolicy": "next_standard_csa" }
+  },
+  "expected": {
+    "designCurrentApprox": 230.94,
+    "designCurrentTolerance": 0.1,
+    "overallStatusOneOf": ["PASS", "WARNING"],
+    "fieldStates": {
+      "designCurrent": { "source": "auto_formula", "status": "valid", "formula": "IB_3PH_KVA" }
+    },
+    "recommendedCSAmm2AtLeast": 70
+  }
+}

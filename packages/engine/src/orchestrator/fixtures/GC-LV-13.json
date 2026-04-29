@@ -1,0 +1,22 @@
+{
+  "id": "GC-LV-13",
+  "description": "Stage B armour path: Cu/XLPE 3C+N SWA, IB ≈ 47 A, method E, 60 m — armourCsa derived from dataset (auto_dataset).",
+  "spec": "v1.3 Stage B / CR-OQ-7 / armour SWA dataset",
+  "input": {
+    "load": { "type": "general", "powerKW": 25, "powerFactor": 0.85, "efficiency": 0.9, "demandFactor": 1.0 },
+    "system": { "voltageV": 400, "phase": 3, "frequencyHz": 50 },
+    "cable": { "conductorMaterial": "Cu", "insulationType": "XLPE", "coreConfiguration": "3C+N", "cableType": "multicore", "armourType": "SWA" },
+    "installation": { "methodCode": "E", "ambientTempC": 30, "soilResistivityK_m_W": null, "groupCount": 1 },
+    "route": { "lengthM": 60 },
+    "protection": { "deviceType": "MCCB", "ratedCurrentA": 63, "operatingCurrentI2A": 91, "tripTimeS": 0.1, "shortCircuitKA": 6 },
+    "projectPolicy": { "maxVoltageDropPercent": 5, "useReactance": false, "resistanceModel": "fixed_reference", "roundingPolicy": "next_standard_csa" }
+  },
+  "expected": {
+    "designCurrentApprox": 47.17,
+    "designCurrentTolerance": 0.1,
+    "overallStatusOneOf": ["PASS", "WARNING"],
+    "fieldStates": {
+      "armourCsa": { "source": "auto_dataset", "status": "valid" }
+    }
+  }
+}

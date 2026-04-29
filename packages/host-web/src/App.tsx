@@ -84,6 +84,7 @@ export function App(): React.ReactElement {
             onChange={setForm}
             onSubmit={() => void onSubmit()}
             busy={busy}
+            result={lastResult}
           />
         </div>
         <div className="col col-result">
