@@ -356,7 +356,22 @@ export function sizeCable(input: CircuitInput, options: SizeCableOptions = {}): 
   fieldStates.loadedConductors = lcRes.state;
   if (lcRes.warnings.length > 0) warnings.push(...lcRes.warnings);
   if (lcRes.info.length > 0) info.push(...lcRes.info);
-  const lcDerived = lcRes.loadedConductors ?? (resolved.system.phase === 1 ? 2 : 3);
+  if (lcRes.state.status !== 'valid' || lcRes.loadedConductors == null) {
+    audit.add({
+      criterion: 'ampacity',
+      inputs: { state: lcRes.state },
+      formula: lcRes.state.formula ?? 'loadedConductors derivation',
+      intermediateValues: { loadedConductors: lcRes.loadedConductors },
+      decision: lcRes.state.status === 'invalid' ? 'FAIL' : 'INCOMPLETE',
+      reason: lcRes.state.reason ?? 'loaded conductors could not be derived',
+    });
+    return buildSkeleton(errors, warnings, audit.build(), ibA, dataset.meta.datasetId, {
+      maxDropPercent: resolved.projectPolicy.maxVoltageDropPercent,
+      fieldStates,
+      info,
+    });
+  }
+  const lcDerived = lcRes.loadedConductors;
   if (lcDerived === 4) {
     warnings.push({
       code: 'W-CR-008',

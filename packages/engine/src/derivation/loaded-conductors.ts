@@ -105,16 +105,36 @@ export function deriveLoadedConductors(input: CircuitInput): DeriveLoadedConduct
   const info: InfoMessage[] = [];
 
   // ── 1. Override path ────────────────────────────────────────────────
-  const ov = input.overrides?.loadedConductors;
-  if (typeof ov === 'number' && Number.isFinite(ov) && Number.isInteger(ov) && ov >= 2 && ov <= 4) {
-    warnings.push({
-      code: 'W-CR-005',
-      message: `loadedConductors overridden to ${ov} (derivation bypassed)`,
-      field: 'overrides.loadedConductors',
-    });
+  if (input.overrides && 'loadedConductors' in input.overrides) {
+    const ov = input.overrides.loadedConductors;
+    if (
+      typeof ov === 'number' &&
+      Number.isFinite(ov) &&
+      Number.isInteger(ov) &&
+      ov >= 2 &&
+      ov <= 4
+    ) {
+      warnings.push({
+        code: 'W-CR-005',
+        message: `loadedConductors overridden to ${ov} (derivation bypassed)`,
+        field: 'overrides.loadedConductors',
+      });
+      return {
+        state: FieldStateBuilder.override<number>(ov),
+        loadedConductors: ov,
+        promotedByNeutral: false,
+        warnings,
+        info,
+      };
+    }
+
     return {
-      state: FieldStateBuilder.override<number>(ov),
-      loadedConductors: ov,
+      state: FieldStateBuilder.invalid<number>(
+        'override',
+        'loaded_conductors_override_out_of_range',
+        { formula: 'LC_OVERRIDE', inputs: { loadedConductors: ov } },
+      ),
+      loadedConductors: null,
       promotedByNeutral: false,
       warnings,
       info,

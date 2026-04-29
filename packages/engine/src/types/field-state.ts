@@ -50,6 +50,8 @@ export type FieldReason =
   | 'no_dataset_match'
   | 'not_applicable'
   | 'out_of_range'
+  | 'loaded_conductors_override_out_of_range'
+  | 'armour_csa_override_must_be_positive'
   | 'default_fallback'
   | 'override_applied'
   | 'legacy_preserved_no_recalc';

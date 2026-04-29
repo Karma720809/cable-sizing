@@ -97,13 +97,27 @@ describe('deriveArmour — dataset lookup', () => {
 });
 
 describe('deriveArmour — overrides', () => {
-  it('overrides.armourCsaMm2 wins, source=override, W-CR-004 emitted', () => {
+  it('overrides.armourCsaMm2 > 0 wins, source=override, W-CR-004 emitted', () => {
     const r = deriveArmour({ ...BASE, overrides: { armourCsaMm2: 200 } }, ds, 95);
     expect(r.state.source).toBe('override');
+    expect(r.state.status).toBe('valid');
     expect(r.armour?.armourCsaMm2).toBe(200);
     expect(r.armour?.kArmour).toBe(51); // pulled from SWA dataset
     expect(r.warnings[0]?.code).toBe('W-CR-004');
   });
+
+  it.each([0, -10])(
+    'overrides.armourCsaMm2=%s → invalid override with no dataset fallback',
+    (armourCsaMm2) => {
+      const r = deriveArmour({ ...BASE, overrides: { armourCsaMm2 } }, ds, 95);
+      expect(r.state.source).toBe('override');
+      expect(r.state.status).toBe('invalid');
+      expect(r.state.value).toBeNull();
+      expect(r.state.reason).toBe('armour_csa_override_must_be_positive');
+      expect(r.armour).toBeNull();
+      expect(r.warnings.find((w) => w.code === 'W-CR-004')).toBeUndefined();
+    },
+  );
 
   it('override works even when armourType is unset (defaults to SWA k)', () => {
     const r = deriveArmour(

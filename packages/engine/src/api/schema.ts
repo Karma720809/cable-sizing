@@ -79,8 +79,8 @@ const projectPolicySchema = z.object({
 
 const overridesSchema = z.object({
   designCurrent: z.number().finite().optional(),
-  loadedConductors: z.number().int().positive().optional(),
-  armourCsaMm2: z.number().finite().positive().optional(),
+  loadedConductors: z.number().int().optional(),
+  armourCsaMm2: z.number().finite().optional(),
 });
 
 const migrationLegacyKSchema = z.object({

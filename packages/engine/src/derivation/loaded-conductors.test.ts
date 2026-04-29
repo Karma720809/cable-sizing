@@ -134,11 +134,36 @@ describe('deriveLoadedConductors — overrides', () => {
     expect(r.info).toHaveLength(0);
   });
 
-  it('out-of-range override falls back to derivation (treated as absent)', () => {
+  it('overrides.loadedConductors=3 → valid override', () => {
+    const r = deriveLoadedConductors({ ...BASE, overrides: { loadedConductors: 3 } });
+    expect(r.loadedConductors).toBe(3);
+    expect(r.state.source).toBe('override');
+    expect(r.state.status).toBe('valid');
+    expect(r.warnings[0]?.code).toBe('W-CR-005');
+  });
+
+  it.each([0, 1, 5, -1, 2.5])(
+    'overrides.loadedConductors=%s → invalid override with no auto fallback',
+    (loadedConductors) => {
+      const r = deriveLoadedConductors({
+        ...BASE,
+        overrides: { loadedConductors },
+      });
+      expect(r.loadedConductors).toBeNull();
+      expect(r.state.source).toBe('override');
+      expect(r.state.status).toBe('invalid');
+      expect(r.state.value).toBeNull();
+      expect(r.state.reason).toBe('loaded_conductors_override_out_of_range');
+      expect(r.warnings).toHaveLength(0);
+    },
+  );
+
+  it('override absent still uses auto derivation', () => {
     const r = deriveLoadedConductors({
       ...BASE,
-      overrides: { loadedConductors: 10 }, // schema would reject; defensive in case
+      overrides: {},
     });
-    expect(r.loadedConductors).toBe(3); // falls through to derivation
+    expect(r.loadedConductors).toBe(3);
+    expect(r.state.source).toBe('auto_formula');
   });
 });

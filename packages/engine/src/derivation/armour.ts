@@ -76,27 +76,39 @@ export function deriveArmour(
   const warnings: Warning[] = [];
 
   // ── 1. Override path ────────────────────────────────────────────────
-  const ov = input.overrides?.armourCsaMm2;
-  if (typeof ov === 'number' && Number.isFinite(ov) && ov > 0) {
-    const armourType: 'SWA' | 'STA' =
-      input.cable.armourType === 'STA' ? 'STA' : 'SWA';
-    const ds = armourType === 'STA' ? dataset.armour?.sta : dataset.armour?.swa;
-    const kArmour = ds?.kArmour ?? 51; // Default per IEC 60364-5-54 if dataset absent.
-    const bundle: ArmourBundle = {
-      armourCsaMm2: ov,
-      kArmour,
-      armourType,
-      sourceRef: 'user override',
-      cableConstruction: buildConstructionKey(input) ?? '<override>',
-    };
-    warnings.push({
-      code: 'W-CR-004',
-      message: `armour CSA overridden to ${ov} mm² (dataset lookup bypassed)`,
-      field: 'overrides.armourCsaMm2',
-    });
+  if (input.overrides && 'armourCsaMm2' in input.overrides) {
+    const ov = input.overrides.armourCsaMm2;
+    if (typeof ov === 'number' && Number.isFinite(ov) && ov > 0) {
+      const armourType: 'SWA' | 'STA' =
+        input.cable.armourType === 'STA' ? 'STA' : 'SWA';
+      const ds = armourType === 'STA' ? dataset.armour?.sta : dataset.armour?.swa;
+      const kArmour = ds?.kArmour ?? 51; // Default per IEC 60364-5-54 if dataset absent.
+      const bundle: ArmourBundle = {
+        armourCsaMm2: ov,
+        kArmour,
+        armourType,
+        sourceRef: 'user override',
+        cableConstruction: buildConstructionKey(input) ?? '<override>',
+      };
+      warnings.push({
+        code: 'W-CR-004',
+        message: `armour CSA overridden to ${ov} mm² (dataset lookup bypassed)`,
+        field: 'overrides.armourCsaMm2',
+      });
+      return {
+        state: FieldStateBuilder.override<ArmourBundle>(bundle),
+        armour: bundle,
+        warnings,
+      };
+    }
+
     return {
-      state: FieldStateBuilder.override<ArmourBundle>(bundle),
-      armour: bundle,
+      state: FieldStateBuilder.invalid<ArmourBundle>(
+        'override',
+        'armour_csa_override_must_be_positive',
+        { inputs: { armourCsaMm2: ov } },
+      ),
+      armour: null,
       warnings,
     };
   }

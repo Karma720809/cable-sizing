@@ -162,6 +162,30 @@ describe('AC-5: loadedConductors derivation', () => {
     expect(r.ampacity.loadedConductorsUsed).toBe(2);
     expect(r.warnings.find((w) => w.code === 'W-CR-005')).toBeDefined();
   });
+
+  it('overrides.loadedConductors=3 → valid override', () => {
+    const r = sizeCable({ ...BASE, overrides: { loadedConductors: 3 } });
+    expect(r.fieldStates?.loadedConductors?.source).toBe('override');
+    expect(r.fieldStates?.loadedConductors?.status).toBe('valid');
+    expect(r.fieldStates?.loadedConductors?.value).toBe(3);
+    expect(r.ampacity.loadedConductorsUsed).toBe(3);
+  });
+
+  it.each([0, 1, 5])(
+    'overrides.loadedConductors=%s → invalid FieldState and downstream sizing blocked',
+    (loadedConductors) => {
+      const r = sizeCable({ ...BASE, overrides: { loadedConductors } });
+      expect(r.fieldStates?.loadedConductors?.source).toBe('override');
+      expect(r.fieldStates?.loadedConductors?.status).toBe('invalid');
+      expect(r.fieldStates?.loadedConductors?.value).toBeNull();
+      expect(r.fieldStates?.loadedConductors?.reason).toBe(
+        'loaded_conductors_override_out_of_range',
+      );
+      expect(r.recommendedCSAmm2).toBeNull();
+      expect(r.ampacity.status).toBe('FAIL');
+      expect(r.ampacity.loadedConductorsUsed).toBeNull();
+    },
+  );
 });
 
 // ─────────────────────────────────────────────────────────────────────
@@ -199,6 +223,22 @@ describe('AC-9: Armour CSA derivation', () => {
     expect(r.warnings.find((w) => w.code === 'W-CR-004')).toBeDefined();
     expect(r.fieldStates?.armourCsa?.source).toBe('override');
   });
+
+  it.each([0, -10])(
+    'SWA armour with overrides.armourCsaMm2=%s → invalid FieldState, no dataset fallback',
+    (armourCsaMm2) => {
+      const r = sizeCable({
+        ...BASE,
+        cable: { ...BASE.cable, armourType: 'SWA' },
+        overrides: { armourCsaMm2 },
+      });
+      expect(r.fieldStates?.armourCsa?.source).toBe('override');
+      expect(r.fieldStates?.armourCsa?.status).toBe('invalid');
+      expect(r.fieldStates?.armourCsa?.value).toBeNull();
+      expect(r.fieldStates?.armourCsa?.reason).toBe('armour_csa_override_must_be_positive');
+      expect(r.warnings.find((w) => w.code === 'W-CR-004')).toBeUndefined();
+    },
+  );
 
   it('armour SC verification: oversize armour passes silently', () => {
     const r = sizeCable({
