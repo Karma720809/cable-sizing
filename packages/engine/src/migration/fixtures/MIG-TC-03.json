@@ -1,0 +1,22 @@
+{
+  "id": "MIG-TC-03",
+  "description": "Patch-3: capacitance and screenCsaMm2 are removed from active schema and listed as discarded with backup.",
+  "target": "migrateLegacyInput",
+  "spec": "Design_Change_LV_v1.3 §12.4 / AC-16",
+  "legacyInput": {
+    "schemaVersion": "v1.0",
+    "voltage": 400,
+    "powerKW": 50,
+    "capacitance": 0.42,
+    "screenCsaMm2": 16
+  },
+  "options": {},
+  "expected": {
+    "discardedFields": [
+      { "fieldId": "capacitance", "preservedInBackup": true, "reason": "patch3_capacitance_screen" },
+      { "fieldId": "screenCsaMm2", "preservedInBackup": true, "reason": "patch3_capacitance_screen" }
+    ],
+    "fieldChangesExclude": ["capacitance", "screenCsaMm2", "armourCsaMm2"],
+    "legacyPayloadBackupHasFields": ["capacitance", "screenCsaMm2"]
+  }
+}

@@ -93,25 +93,34 @@ describe('Contract fixtures — sizeCable success envelope (v1)', () => {
 
   it('all required top-level keys are present (stable v1 result surface)', () => {
     if (!(res.ok && res.type === 'sizeCable:result')) throw new Error('unreachable');
-    const keys = Object.keys(res.data.result).sort();
-    expect(keys).toEqual(
-      [
-        'ampacity',
-        'apiVersion',
-        'auditTrail',
-        'datasetId',
-        'designCurrentA',
-        'engineVersion',
-        'errors',
-        'overallStatus',
-        'protectionCoordination',
-        'recommendedCSAmm2',
-        'selectionDriver',
-        'shortCircuit',
-        'voltageDrop',
-        'warnings',
-      ].sort(),
-    );
+    const keys = new Set(Object.keys(res.data.result));
+    // v1 frozen keys — must always be present (Adjustment-3: outer envelope unchanged).
+    const REQUIRED_V1 = [
+      'ampacity',
+      'apiVersion',
+      'auditTrail',
+      'datasetId',
+      'designCurrentA',
+      'engineVersion',
+      'errors',
+      'overallStatus',
+      'protectionCoordination',
+      'recommendedCSAmm2',
+      'selectionDriver',
+      'shortCircuit',
+      'voltageDrop',
+      'warnings',
+    ];
+    for (const k of REQUIRED_V1) {
+      expect(keys.has(k)).toBe(true);
+    }
+    // v1.3 optional sidecar keys (Stage B emits fieldStates always; info only
+    // when an InfoMessage was raised). Allowed but not required.
+    const OPTIONAL_V13 = new Set(['fieldStates', 'info']);
+    for (const k of keys) {
+      if (REQUIRED_V1.includes(k) || OPTIONAL_V13.has(k)) continue;
+      throw new Error(`unexpected top-level key in v1.3 envelope: ${k}`);
+    }
   });
 });
 

@@ -67,12 +67,18 @@ export function applyDefaults(input: CircuitInput): DefaultsResult {
     }
   }
 
-  // Ambient temp — default depends on air/ground.
+  // Ambient temp — default depends on air/ground. v1.3 Stage B: emits the
+  // granular W-CR-002 instead of the generic W-DEFAULT-APPLIED so that UIs
+  // can render the spec-specific message ("주위 온도가 입력되지 않아 기본값(30°C)이 적용되었습니다").
   if (resolved.installation.ambientTempC == null) {
     const env = environmentOf(resolved.installation.methodCode);
     const def = env === 'ground' ? 20 : 30;
     resolved.installation.ambientTempC = def;
-    warnings.push(warn('installation.ambientTempC', def, 'installation.ambientTempC'));
+    warnings.push({
+      code: 'W-CR-002',
+      message: `ambient temperature not provided; default (${def}°C) applied`,
+      field: 'installation.ambientTempC',
+    });
   }
 
   // groupCount

@@ -1,0 +1,23 @@
+{
+  "id": "GC-LV-AUTO-04",
+  "description": "overrides.designCurrent wins over P_kW formula: source=override, status=valid, W-CR-001 emitted.",
+  "spec": "Implementation_Spec_LV_v2.0 §3.1 (priority 1) / AC-3 / W-CR-001",
+  "input": {
+    "load": { "type": "general", "powerKW": 25, "powerFactor": 0.85, "efficiency": 0.9, "demandFactor": 1.0 },
+    "system": { "voltageV": 400, "phase": 3, "frequencyHz": 50 },
+    "cable": { "conductorMaterial": "Cu", "insulationType": "PVC", "coreConfiguration": "3C+N", "cableType": "multicore" },
+    "installation": { "methodCode": "C", "ambientTempC": 30, "soilResistivityK_m_W": null, "groupCount": 1 },
+    "route": { "lengthM": 40 },
+    "protection": { "deviceType": "MCCB", "ratedCurrentA": 200, "operatingCurrentI2A": 290, "tripTimeS": 0.1, "shortCircuitKA": 15 },
+    "projectPolicy": { "maxVoltageDropPercent": 5, "useReactance": false, "resistanceModel": "fixed_reference", "roundingPolicy": "next_standard_csa" },
+    "overrides": { "designCurrent": 145 }
+  },
+  "expected": {
+    "designCurrentApprox": 145.0,
+    "designCurrentTolerance": 0.001,
+    "fieldStates": {
+      "designCurrent": { "source": "override", "status": "valid" }
+    },
+    "warningCodes": ["W-CR-001"]
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "id": "GC-LV-10",
+  "description": "powerFactor = 1.2 (out of physical range) → E-VAL-002, overallStatus=INCOMPLETE.",
+  "spec": "TC-010",
+  "input": {
+    "load": { "type": "general", "powerKW": 25, "powerFactor": 1.2, "efficiency": 0.9, "demandFactor": 1.0 },
+    "system": { "voltageV": 400, "phase": 3, "frequencyHz": 50 },
+    "cable": { "conductorMaterial": "Cu", "insulationType": "PVC", "coreConfiguration": "3C+N", "cableType": "multicore" },
+    "installation": { "methodCode": "C", "ambientTempC": 30, "soilResistivityK_m_W": null, "groupCount": 1 },
+    "route": { "lengthM": 50 },
+    "protection": { "deviceType": "MCB", "ratedCurrentA": 50, "operatingCurrentI2A": 72.5, "tripTimeS": 0.1, "shortCircuitKA": 10 },
+    "projectPolicy": { "maxVoltageDropPercent": 5, "useReactance": false, "resistanceModel": "fixed_reference", "roundingPolicy": "next_standard_csa" }
+  },
+  "expected": {
+    "overallStatus": "INCOMPLETE",
+    "errorCodes": ["E-VAL-002"]
+  }
+}

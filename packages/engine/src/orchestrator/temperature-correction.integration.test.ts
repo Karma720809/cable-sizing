@@ -202,8 +202,8 @@ describe('Stage 5C — temperature-corrected resistance', () => {
     expect(r.errors.find((e) => e.code === 'E-TEMP-AMBIENT-OVER-MAX')).toBeUndefined();
   });
 
-  it('engineVersion reports 0.11.0', () => {
+  it('engineVersion reports 0.12.0', () => {
     const r = sizeCable(baseInput());
-    expect(r.engineVersion).toBe('0.11.0');
+    expect(r.engineVersion).toBe('0.12.0');
   });
 });

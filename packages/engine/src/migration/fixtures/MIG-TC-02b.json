@@ -1,0 +1,16 @@
+{
+  "id": "MIG-TC-02b",
+  "description": "Patch-1: sufficient inputs + legacy K + user not approved → legacy_preserved (direct policy call).",
+  "target": "applyCorrectionFactorPolicy",
+  "spec": "Design_Change_LV_v1.3 §12.3 / AC-13",
+  "args": {
+    "legacyKValues": { "k1": 0.91, "k2": 0.85, "kTotal": 0.7735 },
+    "sufficientInputsForRecalc": true,
+    "userApproved": false,
+    "recalculatedBundle": { "k1": 0.96, "k2": 0.85, "kTotal": 0.816 }
+  },
+  "expected": {
+    "source": "legacy_preserved",
+    "value": { "k1": 0.91, "k2": 0.85, "kTotal": 0.7735 }
+  }
+}

@@ -14,18 +14,24 @@ import { z } from 'zod';
 import type { CircuitInput } from '../types/index.js';
 
 const loadSchema = z.object({
-  type: z.enum(['general', 'motor', 'heater', 'lighting']),
+  type: z.enum(['general', 'motor', 'heater', 'lighting', 'transformer']),
   powerKW: z.number().finite().nullable(),
   powerFactor: z.number().finite().nullable(),
   efficiency: z.number().finite().nullable(),
   demandFactor: z.number().finite().nullable(),
   designCurrentOverrideA: z.number().finite().nullable().optional(),
+  // v1.3 Stage B additions (optional)
+  fla: z.number().finite().nullable().optional(),
+  kva: z.number().finite().nullable().optional(),
 });
 
 const systemSchema = z.object({
   voltageV: z.number().finite(),
   phase: z.union([z.literal(1), z.literal(3)]),
   frequencyHz: z.union([z.literal(50), z.literal(60)]),
+  // v1.3 Stage A — optional 4-bus topology used by Stage B's loadedConductors
+  // derivation. Omission keeps existing inputs valid (regression-safe).
+  topology: z.enum(['1ph2w', '1ph3w', '3ph3w', '3ph4w']).optional(),
 });
 
 const cableSchema = z.object({
@@ -33,6 +39,8 @@ const cableSchema = z.object({
   insulationType: z.enum(['PVC', 'XLPE']),
   coreConfiguration: z.enum(['2C', '3C', '4C', '3C+N']),
   cableType: z.enum(['multicore', 'single-core']),
+  // v1.3 Stage B (optional)
+  armourType: z.enum(['SWA', 'STA', 'none']).optional(),
 });
 
 const installationSchema = z.object({
@@ -62,6 +70,31 @@ const projectPolicySchema = z.object({
   roundingPolicy: z.literal('next_standard_csa'),
 });
 
+// ─────────────────────────────────────────────────────────────────────
+// v1.3 Stage A — optional extensions (additive, no behavior change)
+//   - overrides: explicit user override values for derived fields
+//   - neutralCarriesCurrent: 1ph3w / 3ph4w neutral-load toggle
+//   - _migration: quarantined namespace for v1.x → v1.5 migration
+// ─────────────────────────────────────────────────────────────────────
+
+const overridesSchema = z.object({
+  designCurrent: z.number().finite().optional(),
+  loadedConductors: z.number().int().positive().optional(),
+  armourCsaMm2: z.number().finite().positive().optional(),
+});
+
+const migrationLegacyKSchema = z.object({
+  k1: z.number().finite().optional(),
+  k2: z.number().finite().optional(),
+  k3: z.number().finite().optional(),
+  kTotal: z.number().finite().optional(),
+});
+
+const migrationSchema = z.object({
+  recalculateLegacyCorrectionFactors: z.boolean().optional(),
+  legacyCorrectionFactors: migrationLegacyKSchema.optional(),
+});
+
 export const CircuitInputSchema = z.object({
   load: loadSchema,
   system: systemSchema,
@@ -70,6 +103,9 @@ export const CircuitInputSchema = z.object({
   route: routeSchema,
   protection: protectionSchema,
   projectPolicy: projectPolicySchema,
+  overrides: overridesSchema.optional(),
+  neutralCarriesCurrent: z.boolean().optional(),
+  _migration: migrationSchema.optional(),
 });
 
 // Note: a compile-time assertion that `z.infer<typeof CircuitInputSchema>`

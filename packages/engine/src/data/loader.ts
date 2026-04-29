@@ -58,6 +58,9 @@ import kValuesJson from './datasets/iec60364_lv_v1/short_circuit/k_values.json' 
 // projectPolicy.resistanceModel === 'temperature_corrected'.
 import alphaJson from './datasets/iec60364_lv_v1/physics/alpha_coefficients.json' with { type: 'json' };
 
+// v1.3 Stage B: armour CSA dataset (BS 5467 placeholder — status='draft').
+import armourSwaJson from './datasets/iec60364_lv_v1/armour/swa.json' with { type: 'json' };
+
 import type {
   Dataset,
   DatasetMeta,
@@ -70,6 +73,8 @@ import type {
   ImpedanceDataset,
   KValuesDataset,
   AlphaCoefficientsDataset,
+  ArmourDataset,
+  ArmourEntry,
 } from '../types/index.js';
 
 export class DatasetQualityError extends Error {
@@ -321,6 +326,41 @@ function qualityCheck(ds: {
   }
 }
 
+/**
+ * v1.3 Stage B: armour dataset structural check. Lighter than the LV
+ * core checks because the data is acknowledged placeholder (status='draft');
+ * we only enforce shape and ascending csa. Stage D will re-validate with
+ * the dataset matrix sourcing process.
+ */
+function armourQualityCheck(a: ArmourDataset): void {
+  const errs: string[] = [];
+  if (!a.entries || a.entries.length === 0) errs.push('armour: entries empty');
+  if (!(a.kArmour > 0 && a.kArmour < 200)) errs.push(`armour: kArmour ${a.kArmour} out of sane range`);
+  if (a.armourType !== 'SWA' && a.armourType !== 'STA') {
+    errs.push(`armour: armourType must be SWA|STA, got ${a.armourType}`);
+  }
+  // Group by cableConstruction; csa within each group must strictly ascend.
+  const groups = new Map<string, ArmourEntry[]>();
+  for (const e of a.entries) {
+    const k = e.cableConstruction;
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k)!.push(e);
+  }
+  for (const [k, rows] of groups) {
+    for (let i = 1; i < rows.length; i++) {
+      if (rows[i]!.conductorCsaMm2 <= rows[i - 1]!.conductorCsaMm2) {
+        errs.push(`armour[${k}]: conductorCsaMm2 not ascending at index ${i}`);
+      }
+    }
+    for (const r of rows) {
+      if (!(r.armourCsaMm2 > 0)) errs.push(`armour[${k}]: armourCsaMm2 ${r.armourCsaMm2} non-positive`);
+    }
+  }
+  if (errs.length > 0) {
+    throw new DatasetQualityError(`Armour dataset quality check failed with ${errs.length} issue(s)`, errs);
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────
 // Public loader
 // ─────────────────────────────────────────────────────────────────────
@@ -395,6 +435,7 @@ export function loadDataset(): Dataset {
 
   const kValues = kValuesJson as KValuesDataset;
   const alphaCoefficients = alphaJson as AlphaCoefficientsDataset;
+  const armourSwa = armourSwaJson as ArmourDataset;
 
   qualityCheck({
     meta,
@@ -408,6 +449,10 @@ export function loadDataset(): Dataset {
     kValues,
     alphaCoefficients,
   });
+  // v1.3 Stage B: minimal armour quality check — only structural sanity,
+  // since the data itself is BS 5467 placeholder (status='draft') and
+  // will be re-validated in a future Sourcing pass.
+  armourQualityCheck(armourSwa);
 
   const ds: Dataset = {
     meta,
@@ -417,6 +462,7 @@ export function loadDataset(): Dataset {
     impedance: { datasets: impedanceList, cuMulticore50: impCu },
     shortCircuit: { kValues },
     physics: { alphaCoefficients },
+    armour: { swa: armourSwa },
   };
 
   CACHE = Object.freeze(ds) as Dataset;

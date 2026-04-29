@@ -1,0 +1,20 @@
+{
+  "id": "MIG-TC-02a",
+  "description": "Patch-1: insufficient install-condition inputs + legacy K-values → legacy_preserved (auto-pinned by migrateLegacyInput in Stage A).",
+  "target": "migrateLegacyInput",
+  "spec": "Design_Change_LV_v1.3 §13.3 MIG-TC-02 / AC-13 / AC-14",
+  "legacyInput": {
+    "schemaVersion": "v1.1",
+    "voltage": 400,
+    "powerKW": 100,
+    "correctionFactors": { "k1": 0.91, "k2": 0.85, "kTotal": 0.7735 }
+  },
+  "options": { "acceptCorrectionFactorRecalculation": false },
+  "expected": {
+    "correctionFactorSource": "legacy_preserved",
+    "correctionFactorValue": { "k1": 0.91, "k2": 0.85, "kTotal": 0.7735 },
+    "userApprovalRequired": true,
+    "discardedFieldCount": 0,
+    "fromVersion": "v1.1"
+  }
+}

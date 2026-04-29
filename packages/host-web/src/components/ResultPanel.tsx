@@ -24,6 +24,7 @@ import type {
   MvSizingResult,
 } from '@cable-sizing/engine';
 import { hintFor } from './codeHints.js';
+import { DerivedFieldDisplay } from './circuit/DerivedFieldDisplay.js';
 
 export function ResultPanel({ res }: { res: WorkerResponse | null }): React.ReactElement {
   if (!res) {
@@ -225,6 +226,18 @@ function AuditTrail({ steps }: { steps: AuditStep[] }): React.ReactElement {
             {s.code && <CodeChip code={s.code} />}
           </div>
           <div className="audit-reason">{s.reason}</div>
+          {/* v1.3 sidecar: DerivedFieldRecord[] from this step. */}
+          {s.derivedFields && s.derivedFields.length > 0 && (
+            <div className="audit-derived" data-testid={`audit-derived-${s.step}`}>
+              {s.derivedFields.map((rec) => (
+                <DerivedFieldDisplay
+                  key={rec.fieldId}
+                  label={rec.description ?? rec.fieldId}
+                  state={rec.state}
+                />
+              ))}
+            </div>
+          )}
           <details>
             <summary>formula & values</summary>
             <div className="audit-formula">

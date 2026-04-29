@@ -1,0 +1,15 @@
+{
+  "id": "MIG-TC-04c",
+  "description": "Patch-1 core: recalculated mode allows ±1% drift in recommendedCsaMm2.",
+  "target": "checkEquivalence",
+  "spec": "Design_Change_LV_v1.3 §12.6 / AC-14",
+  "args": {
+    "legacyResult": { "recommendedCsaMm2": 100 },
+    "newResult": { "recommendedCsaMm2": 100.5 },
+    "mode": "recalculated"
+  },
+  "expected": {
+    "identical": true,
+    "toleranceUsed": 0.01
+  }
+}

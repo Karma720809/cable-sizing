@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "1.0",
+  "datasetId": "iec60364_lv_v1.armour.swa",
+  "sourceRef": "BS 5467 / IEC 60502-1 (PLACEHOLDER — values pending validation)",
+  "status": "draft",
+  "armourType": "SWA",
+  "kArmour": 51,
+  "entries": [
+    { "cableConstruction": "3C+E_SWA_XLPE", "conductorCsaMm2": 1.5, "armourCsaMm2": 15 },
+    { "cableConstruction": "3C+E_SWA_XLPE", "conductorCsaMm2": 2.5, "armourCsaMm2": 15 },
+    { "cableConstruction": "3C+E_SWA_XLPE", "conductorCsaMm2": 4, "armourCsaMm2": 17 },
+    { "cableConstruction": "3C+E_SWA_XLPE", "conductorCsaMm2": 6, "armourCsaMm2": 17 },
+    { "cableConstruction": "3C+E_SWA_XLPE", "conductorCsaMm2": 10, "armourCsaMm2": 21 },
+    { "cableConstruction": "3C+E_SWA_XLPE", "conductorCsaMm2": 16, "armourCsaMm2": 31 },
+    { "cableConstruction": "3C+E_SWA_XLPE", "conductorCsaMm2": 25, "armourCsaMm2": 41 },
+    { "cableConstruction": "3C+E_SWA_XLPE", "conductorCsaMm2": 35, "armourCsaMm2": 50 },
+    { "cableConstruction": "3C+E_SWA_XLPE", "conductorCsaMm2": 50, "armourCsaMm2": 50 },
+    { "cableConstruction": "3C+E_SWA_XLPE", "conductorCsaMm2": 70, "armourCsaMm2": 62 },
+    { "cableConstruction": "3C+E_SWA_XLPE", "conductorCsaMm2": 95, "armourCsaMm2": 75 },
+    { "cableConstruction": "3C+E_SWA_XLPE", "conductorCsaMm2": 120, "armourCsaMm2": 84 },
+    { "cableConstruction": "3C+E_SWA_XLPE", "conductorCsaMm2": 150, "armourCsaMm2": 92 },
+    { "cableConstruction": "3C+E_SWA_XLPE", "conductorCsaMm2": 185, "armourCsaMm2": 105 },
+    { "cableConstruction": "3C+E_SWA_XLPE", "conductorCsaMm2": 240, "armourCsaMm2": 122 },
+    { "cableConstruction": "3C+E_SWA_XLPE", "conductorCsaMm2": 300, "armourCsaMm2": 137 }
+  ]
+}

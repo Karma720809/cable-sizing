@@ -58,6 +58,42 @@ export type {
 export { getDatasetManifest, API_VERSION } from './api/manifest.js';
 export type { DatasetManifest, DatasetBundleEntry, SupportedCombination } from './api/manifest.js';
 
+// LV input automation v1.3 (Stage A) — migration policy pure functions.
+// FieldState model and the 5 helper functions below run alongside the
+// existing pipeline; nothing in the LV/MV result contracts changes in
+// Stage A. Stage B turns the FieldState sidecar on; storage feature
+// (separately scoped) drives the migration helpers end-to-end.
+export {
+  mapLegacyFieldSource,
+  MANUAL_FIELDS,
+  AUTO_OVERRIDE_FIELDS,
+} from './migration/source-mapping.js';
+export {
+  applyCorrectionFactorPolicy,
+} from './migration/correction-factor-policy.js';
+export type {
+  ApplyPolicyArgs,
+  CorrectionFactorBundle,
+  LegacyKValues,
+} from './migration/correction-factor-policy.js';
+export {
+  extractDiscardedFields,
+  DISCARDED_FIELD_NAMES,
+} from './migration/discarded-fields.js';
+export { checkEquivalence } from './migration/equivalence-check.js';
+export type { EquivalenceCheckArgs } from './migration/equivalence-check.js';
+export { migrateLegacyInput } from './migration/migrate-legacy-input.js';
+export type {
+  LegacyInput,
+  MigrationFieldChange,
+  DiscardedField,
+  CorrectionFactorComparison,
+  SizingResultComparison,
+  MigrationReport,
+  MigrationOptions,
+  MigrationResult,
+} from './migration/types.js';
+
 // 22.9kV MV (Korean distribution) extension — parallel pipeline + dataset.
 export { sizeCableMv } from './mv/pipeline-mv.js';
 export type { SizeCableMvOptions } from './mv/pipeline-mv.js';

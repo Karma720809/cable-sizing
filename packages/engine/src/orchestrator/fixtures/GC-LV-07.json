@@ -1,0 +1,20 @@
+{
+  "id": "GC-LV-07",
+  "description": "designCurrentOverrideA bypasses load calculation (legacy override path) — emits W-IB-OVERRIDE.",
+  "spec": "TC-007",
+  "input": {
+    "load": { "type": "general", "powerKW": null, "powerFactor": null, "efficiency": null, "demandFactor": null, "designCurrentOverrideA": 80 },
+    "system": { "voltageV": 400, "phase": 3, "frequencyHz": 50 },
+    "cable": { "conductorMaterial": "Cu", "insulationType": "PVC", "coreConfiguration": "3C+N", "cableType": "multicore" },
+    "installation": { "methodCode": "C", "ambientTempC": 30, "soilResistivityK_m_W": null, "groupCount": 1 },
+    "route": { "lengthM": 50 },
+    "protection": { "deviceType": "MCCB", "ratedCurrentA": 100, "operatingCurrentI2A": 145, "tripTimeS": 0.1, "shortCircuitKA": 10 },
+    "projectPolicy": { "maxVoltageDropPercent": 5, "useReactance": false, "resistanceModel": "fixed_reference", "roundingPolicy": "next_standard_csa" }
+  },
+  "expected": {
+    "designCurrentApprox": 80,
+    "designCurrentTolerance": 0.001,
+    "overallStatus": "WARNING",
+    "warningCodes": ["W-IB-OVERRIDE"]
+  }
+}

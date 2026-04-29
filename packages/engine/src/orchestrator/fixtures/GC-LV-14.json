@@ -1,0 +1,25 @@
+{
+  "id": "GC-LV-14",
+  "description": "1-phase split-phase 1ph3w + neutralCarriesCurrent=true → loadedConductors derives 3, ampacity uses 3-loaded table (no W-CR-008 because value≠4).",
+  "spec": "v1.3 Stage B / CR-OQ-3 / topology=1ph3w",
+  "input": {
+    "load": { "type": "general", "powerKW": 8, "powerFactor": 0.85, "efficiency": 0.9, "demandFactor": 1.0 },
+    "system": { "voltageV": 230, "phase": 1, "frequencyHz": 50, "topology": "1ph3w" },
+    "cable": { "conductorMaterial": "Cu", "insulationType": "PVC", "coreConfiguration": "3C+N", "cableType": "multicore" },
+    "installation": { "methodCode": "C", "ambientTempC": 30, "soilResistivityK_m_W": null, "groupCount": 1 },
+    "route": { "lengthM": 30 },
+    "protection": { "deviceType": "MCB", "ratedCurrentA": 50, "operatingCurrentI2A": 72.5, "tripTimeS": 0.1, "shortCircuitKA": 6 },
+    "projectPolicy": { "maxVoltageDropPercent": 5, "useReactance": false, "resistanceModel": "fixed_reference", "roundingPolicy": "next_standard_csa" },
+    "neutralCarriesCurrent": true
+  },
+  "expected": {
+    "designCurrentApprox": 45.47,
+    "designCurrentTolerance": 0.5,
+    "overallStatusOneOf": ["PASS", "WARNING"],
+    "fieldStates": {
+      "loadedConductors": { "source": "auto_formula", "status": "valid", "valueExact": 3 }
+    },
+    "loadedConductorsUsedExact": 3,
+    "excludesWarning": ["W-CR-008"]
+  }
+}

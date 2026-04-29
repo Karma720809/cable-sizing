@@ -448,6 +448,96 @@ code {
   margin: 0.3rem 0 0;
 }
 
+/* ─── Stage C — sidecar/derivation UI ──────────────────────────────── */
+
+.derived-field {
+  margin: 0.4rem 0;
+  padding: 0.4rem 0.55rem;
+  border-radius: 6px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+}
+
+.derived-field-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.derived-field-label {
+  color: var(--muted);
+  font-size: 0.8rem;
+  flex: 1 1 auto;
+}
+
+.derived-field-value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.derived-field-icon {
+  color: var(--muted);
+}
+
+.derived-field-valid .derived-field-icon {
+  color: var(--pass);
+}
+
+.derived-field-incomplete,
+.derived-field-invalid {
+  border-color: var(--fail);
+}
+
+.derived-field-unavailable {
+  opacity: 0.6;
+}
+
+.derived-field-sub {
+  font-size: 0.72rem;
+  margin-top: 0.2rem;
+}
+
+.derived-field-warnings {
+  margin: 0.15rem 0 0;
+  padding-left: 1rem;
+  color: var(--warn);
+}
+
+.field-status-valid {
+  color: var(--pass);
+  border-color: var(--pass);
+}
+
+.field-status-unavailable {
+  color: var(--incomplete);
+  border-color: var(--incomplete);
+}
+
+.field-status-incomplete,
+.field-status-invalid {
+  color: var(--fail);
+  border-color: var(--fail);
+}
+
+.override-toggle {
+  border-top: 1px dotted var(--border);
+  padding-top: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+.override-hint {
+  font-size: 0.75rem;
+  margin-top: 0.1rem;
+  margin-left: 0.25rem;
+}
+
+.ref-method-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
 /* Footer */
 .app-footer {
   margin-top: 1.25rem;

@@ -1,0 +1,1 @@
+Pure helpers for v1.x → v1.5 project migration. No caller until the storage feature lands. Do not delete — Patch-1/2/3 policy is documented in `저압 설계변경서/Design_Change_LV_Cable_Sizing_Input_Automation_v1.3_FINAL.md` §12 and unit-tested via `*.test.ts` in this directory.

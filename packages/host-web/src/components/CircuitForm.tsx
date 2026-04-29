@@ -1,29 +1,41 @@
 /**
- * CircuitForm (App-MVP-1) — sectioned form with progressive disclosure.
+ * CircuitForm — sectioned form with progressive disclosure (App-MVP-1
+ * + LV v1.3 Stage C).
  *
- * Covers the full `CircuitInput` surface of the engine's frozen worker
- * contract, organised into seven fieldsets that mirror the `CircuitInput`
- * shape. Advanced fields (efficiency, demand factor, reactance policy,
- * resistance model, I2 override, trip time, soil ρ, frequency…) live
- * inside a collapsed `<details>` section per group so the default view
- * stays short.
+ * Stage C surfaces the FieldState sidecar emitted by the engine: when a
+ * recent SizingResult is available, the form renders DerivedFieldDisplay
+ * rows for designCurrent / loadedConductors / armourCsa next to the
+ * inputs that drive them. The form remains "dumb" — it produces a plain
+ * object via buildCircuitInput, which is the single source of truth for
+ * validation.
  *
- * The form remains deliberately "dumb": it produces a plain object and
- * hands it to the worker, which is the single source of truth for
- * validation. Nothing here is typed against `CircuitInput` at compile
- * time — that's the engine's job.
+ * Backwards-compatible additions to FormState:
+ *   - topology, neutralCarriesCurrent
+ *   - fla, kva (load), armourType (cable)
+ *   - useLoadedConductorsOverride/loadedConductorsOverride
+ *   - useArmourOverride/armourCsaOverride
+ *   - showAllReferenceMethods
+ * Existing fields keep their original meaning so the smoke test and the
+ * ResultPanel DOM tests remain unchanged.
  */
 import React from 'react';
 import { DEFAULT_INPUT, DEFAULT_MV_INPUT } from '../state/defaultInput.js';
+import type { SizingResult } from '@cable-sizing/engine';
+import { DerivedFieldDisplay } from './circuit/DerivedFieldDisplay.js';
+import { LoadInputFields } from './circuit/LoadInputFields.js';
+import { NeutralLoadToggle } from './circuit/NeutralLoadToggle.js';
+import { OverrideToggle } from './circuit/OverrideToggle.js';
+import {
+  ReferenceMethodSelector,
+  type ReferenceMethodCode,
+} from './circuit/ReferenceMethodSelector.js';
 
 // ─── FormState ─────────────────────────────────────────────────────────
 
 export type VoltageClass = 'LV' | 'MV';
+export type Topology = '1ph2w' | '1ph3w' | '3ph3w' | '3ph4w';
 
 export interface FormState {
-  // Voltage class — switches the form between LV (IEC 60364-5-52) and
-  // 22.9kV MV (KEPCO ES 6145). MV-specific fields are stored alongside LV
-  // fields so the user can toggle without losing input.
   voltageClass: VoltageClass;
 
   // ── MV-specific (22.9kV CNCV-W) ────────────────────────────────
@@ -64,9 +76,13 @@ export interface FormState {
   mvVerifyScreen: boolean;
   mvChargingCurrentThreshold: number;
 
-  // Load (LV)
-  loadType: 'general' | 'motor' | 'heater' | 'lighting';
+  // Load (LV) — v1.3: load type now also covers 'transformer'
+  loadType: 'general' | 'motor' | 'heater' | 'lighting' | 'transformer';
   powerKW: number;
+  /** Motor full-load amps (CR-OQ-1, motor only). */
+  fla: number;
+  /** Transformer apparent power (CR-OQ-1, transformer only). */
+  kva: number;
   powerFactor: number;
   efficiency: number;
   demandFactor: number;
@@ -77,15 +93,22 @@ export interface FormState {
   voltageV: number;
   phase: 1 | 3;
   frequencyHz: 50 | 60;
+  /** v1.3: bus topology drives loadedConductors derivation (CR-OQ-3). */
+  topology: Topology;
+  /** v1.3: neutral-carries-current toggle (CR-OQ-3). */
+  neutralCarriesCurrent: boolean;
 
   // Cable
   conductorMaterial: 'Cu' | 'Al';
   insulationType: 'PVC' | 'XLPE';
   cableType: 'multicore' | 'single-core';
   coreConfiguration: '2C' | '3C' | '4C' | '3C+N';
+  /** v1.3 Stage B: optional armoured-cable hint. */
+  armourType: 'SWA' | 'STA' | 'none';
 
   // Installation
-  methodCode: 'A1' | 'A2' | 'B1' | 'B2' | 'C' | 'D1' | 'D2' | 'E' | 'F' | 'G';
+  methodCode: ReferenceMethodCode;
+  showAllReferenceMethods: boolean;
   ambientTempC: number;
   groupCount: number;
   soilResistivityK_m_W: number;
@@ -106,6 +129,12 @@ export interface FormState {
   useReactance: boolean;
   ignoreReactanceBelowMm2: number;
   resistanceModel: 'fixed_reference' | 'temperature_corrected';
+
+  // v1.3 — additional auto-field overrides (CR-OQ-3, CR-OQ-7)
+  useLoadedConductorsOverride: boolean;
+  loadedConductorsOverride: number;
+  useArmourOverride: boolean;
+  armourCsaOverride: number;
 }
 
 export const INITIAL_FORM: FormState = {
@@ -149,8 +178,10 @@ export const INITIAL_FORM: FormState = {
   mvVerifyScreen: DEFAULT_MV_INPUT.projectPolicy.verifyScreen,
   mvChargingCurrentThreshold: DEFAULT_MV_INPUT.projectPolicy.chargingCurrentThreshold,
 
-  loadType: DEFAULT_INPUT.load.type,
+  loadType: DEFAULT_INPUT.load.type as FormState['loadType'],
   powerKW: DEFAULT_INPUT.load.powerKW,
+  fla: 50,
+  kva: 250,
   powerFactor: DEFAULT_INPUT.load.powerFactor,
   efficiency: DEFAULT_INPUT.load.efficiency,
   demandFactor: DEFAULT_INPUT.load.demandFactor,
@@ -160,13 +191,17 @@ export const INITIAL_FORM: FormState = {
   voltageV: DEFAULT_INPUT.system.voltageV,
   phase: DEFAULT_INPUT.system.phase,
   frequencyHz: DEFAULT_INPUT.system.frequencyHz,
+  topology: '3ph4w',
+  neutralCarriesCurrent: false,
 
   conductorMaterial: DEFAULT_INPUT.cable.conductorMaterial,
   insulationType: DEFAULT_INPUT.cable.insulationType,
   cableType: DEFAULT_INPUT.cable.cableType,
   coreConfiguration: DEFAULT_INPUT.cable.coreConfiguration,
+  armourType: 'none',
 
-  methodCode: DEFAULT_INPUT.installation.methodCode,
+  methodCode: DEFAULT_INPUT.installation.methodCode as ReferenceMethodCode,
+  showAllReferenceMethods: false,
   ambientTempC: DEFAULT_INPUT.installation.ambientTempC,
   groupCount: DEFAULT_INPUT.installation.groupCount,
   soilResistivityK_m_W: 1.0,
@@ -184,6 +219,11 @@ export const INITIAL_FORM: FormState = {
   useReactance: DEFAULT_INPUT.projectPolicy.useReactance,
   ignoreReactanceBelowMm2: 16,
   resistanceModel: DEFAULT_INPUT.projectPolicy.resistanceModel,
+
+  useLoadedConductorsOverride: false,
+  loadedConductorsOverride: 3,
+  useArmourOverride: false,
+  armourCsaOverride: 50,
 };
 
 // ─── Form → MvCircuitInput ─────────────────────────────────────────────
@@ -243,13 +283,16 @@ export function buildMvCircuitInput(f: FormState): unknown {
 
 /** Assemble a raw CircuitInput from the form state. */
 export function buildCircuitInput(f: FormState): unknown {
-  // Keep coreConfiguration coherent with phase unless the user edited it.
-  // (The user can always override via the advanced panel.)
   const coreConfiguration = f.coreConfiguration;
 
-  const loadOverride = f.useDesignCurrentOverride
-    ? { designCurrentOverrideA: f.designCurrentOverrideA }
-    : {};
+  // CR-OQ-1: route load-type-specific fields into the load envelope.
+  // Engine reads load.fla for motor, load.kva for transformer, falls
+  // back to powerKW path otherwise.
+  const isMotor = f.loadType === 'motor';
+  const isTransformer = f.loadType === 'transformer';
+  const loadExtras: Record<string, unknown> = {};
+  if (isMotor) loadExtras.fla = f.fla;
+  if (isTransformer) loadExtras.kva = f.kva;
 
   const i2 = f.useI2Override
     ? f.operatingCurrentI2A
@@ -263,26 +306,47 @@ export function buildCircuitInput(f: FormState): unknown {
       f.methodCode === 'D1' || f.methodCode === 'D2' ? f.soilResistivityK_m_W : null,
   };
 
+  // Coerce topology to match the active phase. The form's onChange path
+  // already snaps these together, but external mutations (e.g. test
+  // fixtures that flip `phase` directly) need the same guarantee so the
+  // engine's loadedConductors derivation reflects the user-visible phase.
+  let topology: Topology = f.topology;
+  if (f.phase === 1 && (topology === '3ph3w' || topology === '3ph4w')) {
+    topology = '1ph2w';
+  } else if (f.phase === 3 && (topology === '1ph2w' || topology === '1ph3w')) {
+    topology = '3ph4w';
+  }
+
+  // v1.3 — overrides envelope (CR-OQ-1, CR-OQ-3, CR-OQ-7).
+  const overrides: Record<string, unknown> = {};
+  if (f.useDesignCurrentOverride) overrides.designCurrent = f.designCurrentOverrideA;
+  if (f.useLoadedConductorsOverride) overrides.loadedConductors = f.loadedConductorsOverride;
+  if (f.useArmourOverride) overrides.armourCsaMm2 = f.armourCsaOverride;
+
+  const cable: Record<string, unknown> = {
+    conductorMaterial: f.conductorMaterial,
+    insulationType: f.insulationType,
+    coreConfiguration,
+    cableType: f.cableType,
+  };
+  if (f.armourType !== 'none') cable.armourType = f.armourType;
+
   return {
     load: {
       type: f.loadType,
-      powerKW: f.powerKW,
+      powerKW: isTransformer ? null : f.powerKW,
       powerFactor: f.powerFactor,
       efficiency: f.efficiency,
       demandFactor: f.demandFactor,
-      ...loadOverride,
+      ...loadExtras,
     },
     system: {
       voltageV: f.voltageV,
       phase: f.phase,
       frequencyHz: f.frequencyHz,
+      topology,
     },
-    cable: {
-      conductorMaterial: f.conductorMaterial,
-      insulationType: f.insulationType,
-      coreConfiguration,
-      cableType: f.cableType,
-    },
+    cable,
     installation,
     route: { lengthM: f.lengthM },
     protection: {
@@ -299,6 +363,8 @@ export function buildCircuitInput(f: FormState): unknown {
       resistanceModel: f.resistanceModel,
       roundingPolicy: 'next_standard_csa',
     },
+    ...(Object.keys(overrides).length > 0 ? { overrides } : {}),
+    ...(f.neutralCarriesCurrent ? { neutralCarriesCurrent: true } : {}),
   };
 }
 
@@ -309,14 +375,19 @@ interface Props {
   onChange: (next: FormState) => void;
   onSubmit: () => void;
   busy: boolean;
+  /** Last successful sizing result — drives DerivedFieldDisplay rows. */
+  result?: SizingResult | null;
 }
 
-export function CircuitForm({ value, onChange, onSubmit, busy }: Props): React.ReactElement {
-  // Small helper to cut boilerplate.
+export function CircuitForm({
+  value,
+  onChange,
+  onSubmit,
+  busy,
+  result,
+}: Props): React.ReactElement {
   const set = <K extends keyof FormState>(k: K, v: FormState[K]): void =>
     onChange({ ...value, [k]: v });
-
-  const methodRequiresSoil = value.methodCode === 'D1' || value.methodCode === 'D2';
 
   return (
     <form
@@ -344,7 +415,7 @@ export function CircuitForm({ value, onChange, onSubmit, busy }: Props): React.R
       {value.voltageClass === 'MV' ? (
         <MvFields value={value} set={set} />
       ) : (
-        <LvFields value={value} set={set} methodRequiresSoil={methodRequiresSoil} />
+        <LvFields value={value} set={set} result={result ?? null} />
       )}
 
       <button type="submit" disabled={busy}>
@@ -359,55 +430,87 @@ interface SubFormProps {
   set: <K extends keyof FormState>(k: K, v: FormState[K]) => void;
 }
 
-function LvFields({ value, set, methodRequiresSoil }: SubFormProps & { methodRequiresSoil: boolean }): React.ReactElement {
+function LvFields({
+  value,
+  set,
+  result,
+}: SubFormProps & { result: SizingResult | null }): React.ReactElement {
+  const designCurrentState = result?.fieldStates?.designCurrent;
+  const loadedConductorsState = result?.fieldStates?.loadedConductors;
+  const armourCsaState = result?.fieldStates?.armourCsa;
+
+  const autoIBHint =
+    designCurrentState && designCurrentState.value != null
+      ? `${(designCurrentState.value as number).toFixed(2)} A`
+      : undefined;
+  const autoLcHint =
+    loadedConductorsState && loadedConductorsState.value != null
+      ? String(loadedConductorsState.value)
+      : undefined;
+  const autoArmourHint =
+    armourCsaState && armourCsaState.value != null && typeof armourCsaState.value === 'object'
+      ? `${(armourCsaState.value as { armourCsaMm2: number }).armourCsaMm2} mm²`
+      : undefined;
+
   return (
     <>
       {/* ─ Load ─ */}
       <fieldset>
         <legend>Load</legend>
-        <SelectField
-          label="Load type"
-          v={value.loadType}
-          options={[
-            ['general', 'General'],
-            ['motor', 'Motor'],
-            ['heater', 'Heater'],
-            ['lighting', 'Lighting'],
-          ]}
-          set={(s) => set('loadType', s as FormState['loadType'])}
+        <LoadInputFields
+          values={{
+            loadType: value.loadType,
+            powerKW: value.powerKW,
+            fla: value.fla,
+            kva: value.kva,
+          }}
+          onChange={(patch) => {
+            if (patch.loadType !== undefined) set('loadType', patch.loadType);
+            if (patch.powerKW !== undefined) set('powerKW', patch.powerKW);
+            if (patch.fla !== undefined) set('fla', patch.fla);
+            if (patch.kva !== undefined) set('kva', patch.kva);
+          }}
         />
-        <NumField label="Power (kW)" v={value.powerKW} set={(n) => set('powerKW', n)} />
-        <NumField
-          label="Power factor"
-          v={value.powerFactor}
-          step={0.01}
-          set={(n) => set('powerFactor', n)}
-        />
-        <AdvancedGroup>
+        {value.loadType !== 'transformer' && (
           <NumField
-            label="Efficiency (η)"
-            v={value.efficiency}
+            label="Power factor"
+            v={value.powerFactor}
             step={0.01}
-            set={(n) => set('efficiency', n)}
+            set={(n) => set('powerFactor', n)}
           />
+        )}
+        {designCurrentState && (
+          <DerivedFieldDisplay
+            label="Design current (IB)"
+            state={designCurrentState as never}
+            unit="A"
+          />
+        )}
+        <AdvancedGroup>
+          {value.loadType !== 'transformer' && (
+            <NumField
+              label="Efficiency (η)"
+              v={value.efficiency}
+              step={0.01}
+              set={(n) => set('efficiency', n)}
+            />
+          )}
           <NumField
             label="Demand factor"
             v={value.demandFactor}
             step={0.05}
             set={(n) => set('demandFactor', n)}
           />
-          <CheckField
+          <OverrideToggle
+            fieldId="designCurrent"
             label="Override design current (IB)"
-            v={value.useDesignCurrentOverride}
-            set={(b) => set('useDesignCurrentOverride', b)}
+            enabled={value.useDesignCurrentOverride}
+            onToggle={(b) => set('useDesignCurrentOverride', b)}
+            value={value.designCurrentOverrideA}
+            onValueChange={(n) => set('designCurrentOverrideA', n)}
+            unit="A"
+            autoHint={autoIBHint}
           />
-          {value.useDesignCurrentOverride && (
-            <NumField
-              label="IB override (A)"
-              v={value.designCurrentOverrideA}
-              set={(n) => set('designCurrentOverrideA', n)}
-            />
-          )}
         </AdvancedGroup>
       </fieldset>
 
@@ -422,8 +525,41 @@ function LvFields({ value, set, methodRequiresSoil }: SubFormProps & { methodReq
             ['1', '1-phase'],
             ['3', '3-phase'],
           ]}
-          set={(s) => set('phase', Number(s) as 1 | 3)}
+          set={(s) => {
+            const p = Number(s) as 1 | 3;
+            set('phase', p);
+            // Keep topology coherent: snap to a sensible default when the
+            // user flips the phase selector. They can pick a different
+            // topology explicitly afterward.
+            if (p === 1 && (value.topology === '3ph3w' || value.topology === '3ph4w')) {
+              set('topology', '1ph2w');
+            } else if (p === 3 && (value.topology === '1ph2w' || value.topology === '1ph3w')) {
+              set('topology', '3ph4w');
+            }
+          }}
         />
+        <SelectField
+          label="Topology"
+          v={value.topology}
+          options={[
+            ['1ph2w', '1ph 2-wire (L+N)'],
+            ['1ph3w', '1ph 3-wire (split-phase)'],
+            ['3ph3w', '3ph 3-wire (delta / no neutral)'],
+            ['3ph4w', '3ph 4-wire (Y + N)'],
+          ]}
+          set={(s) => set('topology', s as Topology)}
+        />
+        <NeutralLoadToggle
+          topology={value.topology}
+          neutralCarriesCurrent={value.neutralCarriesCurrent}
+          onChange={(b) => set('neutralCarriesCurrent', b)}
+        />
+        {loadedConductorsState && (
+          <DerivedFieldDisplay
+            label="Loaded conductors"
+            state={loadedConductorsState as never}
+          />
+        )}
         <AdvancedGroup>
           <SelectField
             label="Frequency"
@@ -433,6 +569,19 @@ function LvFields({ value, set, methodRequiresSoil }: SubFormProps & { methodReq
               ['60', '60 Hz'],
             ]}
             set={(s) => set('frequencyHz', Number(s) as 50 | 60)}
+          />
+          <OverrideToggle
+            fieldId="loadedConductors"
+            label="Override loaded conductors"
+            enabled={value.useLoadedConductorsOverride}
+            onToggle={(b) => set('useLoadedConductorsOverride', b)}
+            value={value.loadedConductorsOverride}
+            onValueChange={(n) =>
+              set('loadedConductorsOverride', Math.max(2, Math.round(n)))
+            }
+            step={1}
+            min={2}
+            autoHint={autoLcHint}
           />
         </AdvancedGroup>
       </fieldset>
@@ -467,6 +616,28 @@ function LvFields({ value, set, methodRequiresSoil }: SubFormProps & { methodReq
           ]}
           set={(s) => set('cableType', s as 'multicore' | 'single-core')}
         />
+        <SelectField
+          label="Armour"
+          v={value.armourType}
+          options={[
+            ['none', 'None (un-armoured)'],
+            ['SWA', 'SWA — steel wire'],
+            ['STA', 'STA — steel tape'],
+          ]}
+          set={(s) => set('armourType', s as FormState['armourType'])}
+        />
+        {value.armourType !== 'none' && armourCsaState && (
+          <DerivedFieldDisplay
+            label="Armour CSA"
+            state={armourCsaState as never}
+            unit="mm²"
+            formatter={(v) =>
+              v && typeof v === 'object' && 'armourCsaMm2' in (v as object)
+                ? String((v as { armourCsaMm2: number }).armourCsaMm2)
+                : '—'
+            }
+          />
+        )}
         <AdvancedGroup>
           <SelectField
             label="Core configuration"
@@ -479,28 +650,30 @@ function LvFields({ value, set, methodRequiresSoil }: SubFormProps & { methodReq
             ]}
             set={(s) => set('coreConfiguration', s as FormState['coreConfiguration'])}
           />
+          {value.armourType !== 'none' && (
+            <OverrideToggle
+              fieldId="armourCsaMm2"
+              label="Override armour CSA"
+              enabled={value.useArmourOverride}
+              onToggle={(b) => set('useArmourOverride', b)}
+              value={value.armourCsaOverride}
+              onValueChange={(n) => set('armourCsaOverride', n)}
+              unit="mm²"
+              autoHint={autoArmourHint}
+            />
+          )}
         </AdvancedGroup>
       </fieldset>
 
       {/* ─ Installation ─ */}
       <fieldset>
         <legend>Installation</legend>
-        <SelectField
-          label="Reference method"
-          v={value.methodCode}
-          options={[
-            ['A1', 'A1 — insulated conductors in conduit in thermally insulated wall'],
-            ['A2', 'A2 — multicore cable in conduit in thermally insulated wall'],
-            ['B1', 'B1 — insulated conductors in conduit on a wall'],
-            ['B2', 'B2 — multicore cable in conduit on a wall'],
-            ['C', 'C — multicore cable on a wall or surface'],
-            ['D1', 'D1 — multicore cable in buried conduit'],
-            ['D2', 'D2 — multicore cable direct buried'],
-            ['E', 'E — multicore in free air'],
-            ['F', 'F — single-core in free air (touching)'],
-            ['G', 'G — single-core in free air (spaced)'],
-          ]}
-          set={(s) => set('methodCode', s as FormState['methodCode'])}
+        <ReferenceMethodSelector
+          cableType={value.cableType}
+          value={value.methodCode}
+          onChange={(m) => set('methodCode', m)}
+          showAll={value.showAllReferenceMethods}
+          onToggleShowAll={(b) => set('showAllReferenceMethods', b)}
         />
         <NumField
           label="Ambient (°C)"
@@ -513,7 +686,7 @@ function LvFields({ value, set, methodRequiresSoil }: SubFormProps & { methodReq
           step={1}
           set={(n) => set('groupCount', Math.max(1, Math.round(n)))}
         />
-        {methodRequiresSoil && (
+        {(value.methodCode === 'D1' || value.methodCode === 'D2') && (
           <NumField
             label="Soil ρ (K·m/W)"
             v={value.soilResistivityK_m_W}
@@ -547,11 +720,7 @@ function LvFields({ value, set, methodRequiresSoil }: SubFormProps & { methodReq
           ]}
           set={(s) => set('deviceType', s as FormState['deviceType'])}
         />
-        <NumField
-          label="Rated In (A)"
-          v={value.ratedCurrentA}
-          set={(n) => set('ratedCurrentA', n)}
-        />
+        <NumField label="Rated In (A)" v={value.ratedCurrentA} set={(n) => set('ratedCurrentA', n)} />
         <NumField
           label="Isc (kA)"
           v={value.shortCircuitKA}
@@ -639,21 +808,49 @@ function MvFields({ value, set }: SubFormProps): React.ReactElement {
           set={(s) => set('mvLoadType', s as FormState['mvLoadType'])}
         />
         {isTransformer ? (
-          <NumField label="Apparent power (MVA)" v={value.mvApparentPowerMVA} step={0.1} set={(n) => set('mvApparentPowerMVA', n)} />
+          <NumField
+            label="Apparent power (MVA)"
+            v={value.mvApparentPowerMVA}
+            step={0.1}
+            set={(n) => set('mvApparentPowerMVA', n)}
+          />
         ) : (
           <>
             <NumField label="Power (kW)" v={value.mvPowerKW} set={(n) => set('mvPowerKW', n)} />
-            <NumField label="Power factor" v={value.mvPowerFactor} step={0.01} set={(n) => set('mvPowerFactor', n)} />
+            <NumField
+              label="Power factor"
+              v={value.mvPowerFactor}
+              step={0.01}
+              set={(n) => set('mvPowerFactor', n)}
+            />
             <AdvancedGroup>
-              <NumField label="Efficiency (η)" v={value.mvEfficiency} step={0.01} set={(n) => set('mvEfficiency', n)} />
-              <NumField label="Demand factor" v={value.mvDemandFactor} step={0.05} set={(n) => set('mvDemandFactor', n)} />
+              <NumField
+                label="Efficiency (η)"
+                v={value.mvEfficiency}
+                step={0.01}
+                set={(n) => set('mvEfficiency', n)}
+              />
+              <NumField
+                label="Demand factor"
+                v={value.mvDemandFactor}
+                step={0.05}
+                set={(n) => set('mvDemandFactor', n)}
+              />
             </AdvancedGroup>
           </>
         )}
         <AdvancedGroup>
-          <CheckField label="Override design current (IB)" v={value.mvUseDesignCurrentOverride} set={(b) => set('mvUseDesignCurrentOverride', b)} />
+          <CheckField
+            label="Override design current (IB)"
+            v={value.mvUseDesignCurrentOverride}
+            set={(b) => set('mvUseDesignCurrentOverride', b)}
+          />
           {value.mvUseDesignCurrentOverride && (
-            <NumField label="IB override (A)" v={value.mvDesignCurrentOverrideA} set={(n) => set('mvDesignCurrentOverrideA', n)} />
+            <NumField
+              label="IB override (A)"
+              v={value.mvDesignCurrentOverrideA}
+              set={(n) => set('mvDesignCurrentOverrideA', n)}
+            />
           )}
         </AdvancedGroup>
       </fieldset>
@@ -678,13 +875,30 @@ function MvFields({ value, set }: SubFormProps): React.ReactElement {
           set={(s) => set('mvCableType', s as FormState['mvCableType'])}
         />
         <AdvancedGroup>
-          <CheckField label="Override screen CSA" v={value.mvUseScreenOverride} set={(b) => set('mvUseScreenOverride', b)} />
+          <CheckField
+            label="Override screen CSA"
+            v={value.mvUseScreenOverride}
+            set={(b) => set('mvUseScreenOverride', b)}
+          />
           {value.mvUseScreenOverride && (
-            <NumField label="Screen CSA (mm²)" v={value.mvScreenCsaMm2} set={(n) => set('mvScreenCsaMm2', n)} />
+            <NumField
+              label="Screen CSA (mm²)"
+              v={value.mvScreenCsaMm2}
+              set={(n) => set('mvScreenCsaMm2', n)}
+            />
           )}
-          <CheckField label="Override capacitance" v={value.mvUseCapacitanceOverride} set={(b) => set('mvUseCapacitanceOverride', b)} />
+          <CheckField
+            label="Override capacitance"
+            v={value.mvUseCapacitanceOverride}
+            set={(b) => set('mvUseCapacitanceOverride', b)}
+          />
           {value.mvUseCapacitanceOverride && (
-            <NumField label="C (μF/km)" v={value.mvCapacitanceUFPerKm} step={0.01} set={(n) => set('mvCapacitanceUFPerKm', n)} />
+            <NumField
+              label="C (μF/km)"
+              v={value.mvCapacitanceUFPerKm}
+              step={0.01}
+              set={(n) => set('mvCapacitanceUFPerKm', n)}
+            />
           )}
         </AdvancedGroup>
       </fieldset>
@@ -714,14 +928,34 @@ function MvFields({ value, set }: SubFormProps): React.ReactElement {
           set={(s) => set('mvFormation', s as FormState['mvFormation'])}
         />
         {isFlatSpaced && (
-          <NumField label="Spacing (mm)" v={value.mvFlatSpacingMm} step={10} set={(n) => set('mvFlatSpacingMm', n)} />
+          <NumField
+            label="Spacing (mm)"
+            v={value.mvFlatSpacingMm}
+            step={10}
+            set={(n) => set('mvFlatSpacingMm', n)}
+          />
         )}
         <NumField label="Ground temp (°C)" v={value.mvAmbientTempC} set={(n) => set('mvAmbientTempC', n)} />
-        <NumField label="Soil ρ (K·m/W)" v={value.mvSoilResistivityK_m_W} step={0.1} set={(n) => set('mvSoilResistivityK_m_W', n)} />
+        <NumField
+          label="Soil ρ (K·m/W)"
+          v={value.mvSoilResistivityK_m_W}
+          step={0.1}
+          set={(n) => set('mvSoilResistivityK_m_W', n)}
+        />
         {isBuried && (
-          <NumField label="Burial depth (m)" v={value.mvBurialDepthM} step={0.1} set={(n) => set('mvBurialDepthM', n)} />
+          <NumField
+            label="Burial depth (m)"
+            v={value.mvBurialDepthM}
+            step={0.1}
+            set={(n) => set('mvBurialDepthM', n)}
+          />
         )}
-        <NumField label="Group count" v={value.mvGroupCount} step={1} set={(n) => set('mvGroupCount', Math.max(1, Math.round(n)))} />
+        <NumField
+          label="Group count"
+          v={value.mvGroupCount}
+          step={1}
+          set={(n) => set('mvGroupCount', Math.max(1, Math.round(n)))}
+        />
       </fieldset>
 
       {/* ─ MV Route ─ */}
@@ -744,15 +978,44 @@ function MvFields({ value, set }: SubFormProps): React.ReactElement {
           set={(s) => set('mvProtectionDevice', s as FormState['mvProtectionDevice'])}
         />
         <NumField label="Rated In (A)" v={value.mvRatedCurrentA} set={(n) => set('mvRatedCurrentA', n)} />
-        <NumField label="Breaking (kA)" v={value.mvBreakingKA} step={0.5} set={(n) => set('mvBreakingKA', n)} />
-        <NumField label="Isc (kA)" v={value.mvShortCircuitKA} step={0.1} set={(n) => set('mvShortCircuitKA', n)} />
-        <NumField label="Trip time (s)" v={value.mvTripTimeS} step={0.01} set={(n) => set('mvTripTimeS', n)} />
+        <NumField
+          label="Breaking (kA)"
+          v={value.mvBreakingKA}
+          step={0.5}
+          set={(n) => set('mvBreakingKA', n)}
+        />
+        <NumField
+          label="Isc (kA)"
+          v={value.mvShortCircuitKA}
+          step={0.1}
+          set={(n) => set('mvShortCircuitKA', n)}
+        />
+        <NumField
+          label="Trip time (s)"
+          v={value.mvTripTimeS}
+          step={0.01}
+          set={(n) => set('mvTripTimeS', n)}
+        />
         <AdvancedGroup>
-          <CheckField label="Verify screen against earth fault" v={value.mvUseEarthFault} set={(b) => set('mvUseEarthFault', b)} />
+          <CheckField
+            label="Verify screen against earth fault"
+            v={value.mvUseEarthFault}
+            set={(b) => set('mvUseEarthFault', b)}
+          />
           {value.mvUseEarthFault && (
             <>
-              <NumField label="Earth fault Ie (kA)" v={value.mvEarthFaultKA} step={0.1} set={(n) => set('mvEarthFaultKA', n)} />
-              <NumField label="Earth fault t (s)" v={value.mvEarthFaultTimeS} step={0.01} set={(n) => set('mvEarthFaultTimeS', n)} />
+              <NumField
+                label="Earth fault Ie (kA)"
+                v={value.mvEarthFaultKA}
+                step={0.1}
+                set={(n) => set('mvEarthFaultKA', n)}
+              />
+              <NumField
+                label="Earth fault t (s)"
+                v={value.mvEarthFaultTimeS}
+                step={0.01}
+                set={(n) => set('mvEarthFaultTimeS', n)}
+              />
             </>
           )}
         </AdvancedGroup>
@@ -761,8 +1024,17 @@ function MvFields({ value, set }: SubFormProps): React.ReactElement {
       {/* ─ MV Policy ─ */}
       <fieldset>
         <legend>Project policy</legend>
-        <NumField label="Max ΔU (%)" v={value.mvMaxVoltageDropPercent} step={0.1} set={(n) => set('mvMaxVoltageDropPercent', n)} />
-        <CheckField label="Verify screen" v={value.mvVerifyScreen} set={(b) => set('mvVerifyScreen', b)} />
+        <NumField
+          label="Max ΔU (%)"
+          v={value.mvMaxVoltageDropPercent}
+          step={0.1}
+          set={(n) => set('mvMaxVoltageDropPercent', n)}
+        />
+        <CheckField
+          label="Verify screen"
+          v={value.mvVerifyScreen}
+          set={(b) => set('mvVerifyScreen', b)}
+        />
         <AdvancedGroup>
           <NumField
             label="Charging current threshold (Ic/IB)"

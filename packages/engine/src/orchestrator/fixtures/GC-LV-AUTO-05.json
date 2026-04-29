@@ -1,0 +1,23 @@
+{
+  "id": "GC-LV-AUTO-05",
+  "description": "topology=3ph4w + neutralCarriesCurrent=true → loadedConductors derives 4, emits I-CR-001 info, W-CR-008 (k4 OOS), ampacity table clamps to 3-loaded.",
+  "spec": "Implementation_Spec_LV_v2.0 §3.1 / CR-OQ-3 / I-CR-001 / W-CR-008 / AC-2",
+  "input": {
+    "load": { "type": "general", "powerKW": 50, "powerFactor": 0.9, "efficiency": 0.92, "demandFactor": 1.0 },
+    "system": { "voltageV": 400, "phase": 3, "frequencyHz": 50, "topology": "3ph4w" },
+    "cable": { "conductorMaterial": "Cu", "insulationType": "PVC", "coreConfiguration": "3C+N", "cableType": "multicore" },
+    "installation": { "methodCode": "C", "ambientTempC": 30, "soilResistivityK_m_W": null, "groupCount": 1 },
+    "route": { "lengthM": 40 },
+    "protection": { "deviceType": "MCCB", "ratedCurrentA": 100, "operatingCurrentI2A": 145, "tripTimeS": 0.1, "shortCircuitKA": 10 },
+    "projectPolicy": { "maxVoltageDropPercent": 5, "useReactance": false, "resistanceModel": "fixed_reference", "roundingPolicy": "next_standard_csa" },
+    "neutralCarriesCurrent": true
+  },
+  "expected": {
+    "fieldStates": {
+      "loadedConductors": { "source": "auto_formula", "status": "valid", "valueExact": 4 }
+    },
+    "warningCodes": ["W-CR-008"],
+    "infoCodes": ["I-CR-001"],
+    "loadedConductorsUsedExact": 3
+  }
+}
