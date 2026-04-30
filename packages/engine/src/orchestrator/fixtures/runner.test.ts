@@ -77,6 +77,11 @@ interface FieldStateExpectation {
 interface FixtureExpected {
   designCurrentApprox?: number;
   designCurrentTolerance?: number;
+  correctionFactorTotalApprox?: number;
+  requiredAmpacityApprox?: number;
+  voltageDropPercentApprox?: number;
+  shortCircuitRequiredCsaApprox?: number;
+  protectionCableAmpacityApprox?: number;
   recommendedCSAmm2?: number | null;
   recommendedCSAmm2AtLeast?: number;
   recommendedCSAmm2AtMost?: number;
@@ -118,11 +123,54 @@ const FIXTURES: ReadonlyArray<Fixture> = [
 
 describe.each<Fixture>(FIXTURES as Fixture[])('$id — $description', (fx) => {
   const result = sizeCable(fx.input);
+  const engineeringTol = 0.01;
 
   if (fx.expected.designCurrentApprox !== undefined) {
     const tol = fx.expected.designCurrentTolerance ?? 0.05;
     it(`designCurrentA ≈ ${fx.expected.designCurrentApprox} ± ${tol}`, () => {
       expect(result.designCurrentA).toBeCloseTo(fx.expected.designCurrentApprox!, decimalsFor(tol));
+    });
+  }
+
+  if (fx.expected.correctionFactorTotalApprox !== undefined) {
+    it(`ampacity.correctionFactors.total ≈ ${fx.expected.correctionFactorTotalApprox} ± ${engineeringTol}`, () => {
+      expectApprox(
+        result.ampacity.correctionFactors.total,
+        fx.expected.correctionFactorTotalApprox!,
+        engineeringTol,
+      );
+    });
+  }
+  if (fx.expected.requiredAmpacityApprox !== undefined) {
+    it(`ampacity.requiredIzA ≈ ${fx.expected.requiredAmpacityApprox} ± ${engineeringTol}`, () => {
+      expectApprox(result.ampacity.requiredIzA, fx.expected.requiredAmpacityApprox!, engineeringTol);
+    });
+  }
+  if (fx.expected.voltageDropPercentApprox !== undefined) {
+    it(`voltageDrop.calculatedDropPercent ≈ ${fx.expected.voltageDropPercentApprox} ± ${engineeringTol}`, () => {
+      expectApprox(
+        result.voltageDrop.calculatedDropPercent,
+        fx.expected.voltageDropPercentApprox!,
+        engineeringTol,
+      );
+    });
+  }
+  if (fx.expected.shortCircuitRequiredCsaApprox !== undefined) {
+    it(`shortCircuit.requiredCSARaw ≈ ${fx.expected.shortCircuitRequiredCsaApprox} ± ${engineeringTol}`, () => {
+      expectApprox(
+        result.shortCircuit.requiredCSARaw,
+        fx.expected.shortCircuitRequiredCsaApprox!,
+        engineeringTol,
+      );
+    });
+  }
+  if (fx.expected.protectionCableAmpacityApprox !== undefined) {
+    it(`protectionCoordination.cableAmpacityIzA ≈ ${fx.expected.protectionCableAmpacityApprox} ± ${engineeringTol}`, () => {
+      expectApprox(
+        result.protectionCoordination.cableAmpacityIzA,
+        fx.expected.protectionCableAmpacityApprox!,
+        engineeringTol,
+      );
     });
   }
 
@@ -251,6 +299,12 @@ function decimalsFor(tolerance: number): number {
   if (tolerance >= 0.01) return 2;
   if (tolerance >= 0.001) return 3;
   return 4;
+}
+
+function expectApprox(actual: number | null | undefined, expected: number, tolerance: number): void {
+  expect(actual).not.toBeNull();
+  expect(actual).not.toBeUndefined();
+  expect(actual!).toBeCloseTo(expected, decimalsFor(tolerance));
 }
 
 function describeExpectation(e: FieldStateExpectation): string {
