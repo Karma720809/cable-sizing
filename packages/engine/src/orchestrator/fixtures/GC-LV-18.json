@@ -1,0 +1,31 @@
+{
+  "id": "GC-LV-18-MOTOR-FLA-ZERO-INVALID",
+  "description": "Motor load with explicit fla=0 and valid powerKW — invalid FLA fails closed without falling back to kW.",
+  "spec": "Golden Patch B / load.type=motor / explicit zero FLA invalid",
+  "input": {
+    "load": { "type": "motor", "powerKW": 25, "fla": 0, "powerFactor": 0.85, "efficiency": 0.9, "demandFactor": 1.0 },
+    "system": { "voltageV": 400, "phase": 3, "frequencyHz": 50, "topology": "3ph3w" },
+    "cable": { "conductorMaterial": "Cu", "insulationType": "PVC", "coreConfiguration": "3C", "cableType": "multicore" },
+    "installation": { "methodCode": "C", "ambientTempC": 30, "soilResistivityK_m_W": null, "groupCount": 1 },
+    "route": { "lengthM": 50 },
+    "protection": { "deviceType": "MCB", "ratedCurrentA": 50, "operatingCurrentI2A": 72.5, "tripTimeS": 0.1, "shortCircuitKA": 10 },
+    "projectPolicy": { "maxVoltageDropPercent": 5, "useReactance": false, "resistanceModel": "fixed_reference", "roundingPolicy": "next_standard_csa" }
+  },
+  "expected": {
+    "designCurrentApprox": 0,
+    "designCurrentTolerance": 0.001,
+    "overallStatus": "INCOMPLETE",
+    "recommendedCSAmm2": null,
+    "selectionDriver": "none",
+    "ampacityStatus": "FAIL",
+    "voltageDropStatus": "FAIL",
+    "shortCircuitStatus": "FAIL",
+    "protectionStatus": "INCOMPLETE",
+    "warningCodesExact": [],
+    "errorCodesExact": [],
+    "fieldStates": {
+      "designCurrent": { "source": "auto_formula", "status": "invalid", "formula": "IB_FLA", "reason": "out_of_range", "valueExact": null }
+    },
+    "loadedConductorsUsedExact": null
+  }
+}

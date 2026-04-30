@@ -1,0 +1,30 @@
+{
+  "id": "GC-LV-25-SHORT-CIRCUIT-INVALID-ZERO",
+  "description": "Explicit shortCircuitKA=0 — validation fails closed instead of treating zero as omitted short-circuit data.",
+  "spec": "Golden Patch B / protection.shortCircuitKA zero invalid",
+  "input": {
+    "load": { "type": "general", "powerKW": 25, "powerFactor": 0.85, "efficiency": 0.9, "demandFactor": 1.0 },
+    "system": { "voltageV": 400, "phase": 3, "frequencyHz": 50, "topology": "3ph3w" },
+    "cable": { "conductorMaterial": "Cu", "insulationType": "PVC", "coreConfiguration": "3C", "cableType": "multicore" },
+    "installation": { "methodCode": "C", "ambientTempC": 30, "soilResistivityK_m_W": null, "groupCount": 1 },
+    "route": { "lengthM": 50 },
+    "protection": { "deviceType": "MCB", "ratedCurrentA": 50, "operatingCurrentI2A": 72.5, "tripTimeS": 0.1, "shortCircuitKA": 0 },
+    "projectPolicy": { "maxVoltageDropPercent": 5, "useReactance": false, "resistanceModel": "fixed_reference", "roundingPolicy": "next_standard_csa" }
+  },
+  "expected": {
+    "designCurrentApprox": 0,
+    "designCurrentTolerance": 0.001,
+    "overallStatus": "INCOMPLETE",
+    "recommendedCSAmm2": null,
+    "selectionDriver": "none",
+    "ampacityStatus": "FAIL",
+    "voltageDropStatus": "FAIL",
+    "shortCircuitStatus": "FAIL",
+    "protectionStatus": "INCOMPLETE",
+    "warningCodesExact": [],
+    "errorCodesExact": ["E-VAL-011"],
+    "errorFields": ["protection.shortCircuitKA"],
+    "errorMessages": ["short_circuit_current_must_be_positive"],
+    "loadedConductorsUsedExact": null
+  }
+}

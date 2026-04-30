@@ -25,6 +25,9 @@ import type {
   FieldSource,
   FieldStatus,
   InfoCode,
+  ProtectionStatus,
+  SelectionDriver,
+  Status,
   WarningCode,
 } from '../../types/index.js';
 
@@ -53,8 +56,14 @@ import gc14 from './GC-LV-14.json' with { type: 'json' };
 import gc15 from './GC-LV-15.json' with { type: 'json' };
 import gc16 from './GC-LV-16.json' with { type: 'json' };
 import gc17 from './GC-LV-17.json' with { type: 'json' };
+import gc18 from './GC-LV-18.json' with { type: 'json' };
+import gc19 from './GC-LV-19.json' with { type: 'json' };
+import gc20 from './GC-LV-20.json' with { type: 'json' };
+import gc22 from './GC-LV-22.json' with { type: 'json' };
 import gc23 from './GC-LV-23.json' with { type: 'json' };
 import gc24 from './GC-LV-24.json' with { type: 'json' };
+import gc25 from './GC-LV-25.json' with { type: 'json' };
+import gc26 from './GC-LV-26.json' with { type: 'json' };
 
 interface FieldStateExpectation {
   source?: FieldSource;
@@ -73,12 +82,21 @@ interface FixtureExpected {
   recommendedCSAmm2AtMost?: number;
   overallStatus?: 'PASS' | 'FAIL' | 'WARNING' | 'INCOMPLETE';
   overallStatusOneOf?: Array<'PASS' | 'FAIL' | 'WARNING' | 'INCOMPLETE'>;
+  selectionDriver?: SelectionDriver;
+  ampacityStatus?: Status;
+  voltageDropStatus?: Status;
+  shortCircuitStatus?: Status;
+  protectionStatus?: ProtectionStatus;
   warningCodes?: WarningCode[];
+  warningCodesExact?: WarningCode[];
   excludesWarning?: WarningCode[];
   errorCodes?: ErrorCode[];
+  errorCodesExact?: ErrorCode[];
+  errorFields?: string[];
+  errorMessages?: string[];
   infoCodes?: InfoCode[];
   fieldStates?: Record<string, FieldStateExpectation>;
-  loadedConductorsUsedExact?: number;
+  loadedConductorsUsedExact?: number | null;
 }
 
 interface Fixture {
@@ -94,7 +112,8 @@ interface Fixture {
 const FIXTURES: ReadonlyArray<Fixture> = [
   auto01, auto02, auto03, auto04, auto05,
   gc01, gc02, gc03, gc04, gc05, gc06, gc07, gc08, gc09, gc10, gc11, gc12,
-  gc13, gc14, gc15, gc16, gc17, gc23, gc24,
+  gc13, gc14, gc15, gc16, gc17, gc18, gc19, gc20, gc22, gc23, gc24, gc25,
+  gc26,
 ] as Fixture[];
 
 describe.each<Fixture>(FIXTURES as Fixture[])('$id — $description', (fx) => {
@@ -137,10 +156,40 @@ describe.each<Fixture>(FIXTURES as Fixture[])('$id — $description', (fx) => {
       expect(fx.expected.overallStatusOneOf!).toContain(result.overallStatus);
     });
   }
+  if (fx.expected.selectionDriver !== undefined) {
+    it(`selectionDriver = ${fx.expected.selectionDriver}`, () => {
+      expect(result.selectionDriver).toBe(fx.expected.selectionDriver);
+    });
+  }
+  if (fx.expected.ampacityStatus !== undefined) {
+    it(`ampacity.status = ${fx.expected.ampacityStatus}`, () => {
+      expect(result.ampacity.status).toBe(fx.expected.ampacityStatus);
+    });
+  }
+  if (fx.expected.voltageDropStatus !== undefined) {
+    it(`voltageDrop.status = ${fx.expected.voltageDropStatus}`, () => {
+      expect(result.voltageDrop.status).toBe(fx.expected.voltageDropStatus);
+    });
+  }
+  if (fx.expected.shortCircuitStatus !== undefined) {
+    it(`shortCircuit.status = ${fx.expected.shortCircuitStatus}`, () => {
+      expect(result.shortCircuit.status).toBe(fx.expected.shortCircuitStatus);
+    });
+  }
+  if (fx.expected.protectionStatus !== undefined) {
+    it(`protectionCoordination.status = ${fx.expected.protectionStatus}`, () => {
+      expect(result.protectionCoordination.status).toBe(fx.expected.protectionStatus);
+    });
+  }
 
   if (fx.expected.warningCodes) {
     it.each(fx.expected.warningCodes)('emits warning %s', (code: WarningCode) => {
       expect(result.warnings.map((w) => w.code)).toContain(code);
+    });
+  }
+  if (fx.expected.warningCodesExact) {
+    it(`warning codes exactly [${fx.expected.warningCodesExact.join(', ')}]`, () => {
+      expect(result.warnings.map((w) => w.code)).toEqual(fx.expected.warningCodesExact);
     });
   }
   if (fx.expected.excludesWarning) {
@@ -151,6 +200,21 @@ describe.each<Fixture>(FIXTURES as Fixture[])('$id — $description', (fx) => {
   if (fx.expected.errorCodes) {
     it.each(fx.expected.errorCodes)('emits error %s', (code: ErrorCode) => {
       expect(result.errors.map((e) => e.code)).toContain(code);
+    });
+  }
+  if (fx.expected.errorCodesExact) {
+    it(`error codes exactly [${fx.expected.errorCodesExact.join(', ')}]`, () => {
+      expect(result.errors.map((e) => e.code)).toEqual(fx.expected.errorCodesExact);
+    });
+  }
+  if (fx.expected.errorFields) {
+    it.each(fx.expected.errorFields)('emits error field %s', (field: string) => {
+      expect(result.errors.map((e) => e.field)).toContain(field);
+    });
+  }
+  if (fx.expected.errorMessages) {
+    it.each(fx.expected.errorMessages)('emits error message %s', (message: string) => {
+      expect(result.errors.map((e) => e.message)).toContain(message);
     });
   }
   if (fx.expected.infoCodes) {
