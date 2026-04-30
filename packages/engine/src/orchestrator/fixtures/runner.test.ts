@@ -64,6 +64,11 @@ import gc23 from './GC-LV-23.json' with { type: 'json' };
 import gc24 from './GC-LV-24.json' with { type: 'json' };
 import gc25 from './GC-LV-25.json' with { type: 'json' };
 import gc26 from './GC-LV-26.json' with { type: 'json' };
+import csaGc02 from './CSA-GC-02-VOLTAGE-DROP-GOVERNING.json' with { type: 'json' };
+import csaGc03 from './CSA-GC-03-SHORT-CIRCUIT-GOVERNING.json' with { type: 'json' };
+import csaGc04 from './CSA-GC-04-PROTECTION-GOVERNING.json' with { type: 'json' };
+import csaGc05 from './CSA-GC-05-DERATING-GOVERNING.json' with { type: 'json' };
+import csaGc06 from './CSA-GC-06-BURIED-CABLE.json' with { type: 'json' };
 
 interface FieldStateExpectation {
   source?: FieldSource;
@@ -118,7 +123,7 @@ const FIXTURES: ReadonlyArray<Fixture> = [
   auto01, auto02, auto03, auto04, auto05,
   gc01, gc02, gc03, gc04, gc05, gc06, gc07, gc08, gc09, gc10, gc11, gc12,
   gc13, gc14, gc15, gc16, gc17, gc18, gc19, gc20, gc22, gc23, gc24, gc25,
-  gc26,
+  gc26, csaGc02, csaGc03, csaGc04, csaGc05, csaGc06,
 ] as Fixture[];
 
 describe.each<Fixture>(FIXTURES as Fixture[])('$id — $description', (fx) => {

@@ -1,0 +1,31 @@
+{
+  "id": "CSA-GC-05-DERATING-GOVERNING",
+  "description": "CSA engineering case: 25 kW Cu/PVC multicore method C at 40 C and groupCount=6 — k_total=0.6264 raises required ampacity from the no-derating 10 mm2 region to 16 mm2; current engine reports mixed because voltage-drop also passes at the ampacity-selected CSA.",
+  "spec": "CSA Patch 1 / final recommended CSA / correction-factor derating governing by engineering basis",
+  "input": {
+    "load": { "type": "general", "powerKW": 25, "powerFactor": 0.85, "efficiency": 0.9, "demandFactor": 1.0 },
+    "system": { "voltageV": 400, "phase": 3, "frequencyHz": 50, "topology": "3ph3w" },
+    "cable": { "conductorMaterial": "Cu", "insulationType": "PVC", "coreConfiguration": "3C", "cableType": "multicore" },
+    "installation": { "methodCode": "C", "ambientTempC": 40, "soilResistivityK_m_W": null, "groupCount": 6 },
+    "route": { "lengthM": 20 },
+    "protection": { "deviceType": "UserDefined", "ratedCurrentA": 47.5, "operatingCurrentI2A": 68, "tripTimeS": null, "shortCircuitKA": null },
+    "projectPolicy": { "maxVoltageDropPercent": 5, "useReactance": false, "resistanceModel": "fixed_reference", "roundingPolicy": "next_standard_csa" }
+  },
+  "expected": {
+    "designCurrentApprox": 47.17,
+    "designCurrentTolerance": 0.01,
+    "correctionFactorTotalApprox": 0.6264,
+    "requiredAmpacityApprox": 75.3,
+    "voltageDropPercentApprox": 0.46,
+    "protectionCableAmpacityApprox": 47.61,
+    "recommendedCSAmm2": 16,
+    "selectionDriver": "mixed",
+    "ampacityStatus": "PASS",
+    "voltageDropStatus": "PASS",
+    "protectionStatus": "PASS",
+    "overallStatus": "PASS",
+    "warningCodesExact": [],
+    "errorCodesExact": [],
+    "loadedConductorsUsedExact": 3
+  }
+}
