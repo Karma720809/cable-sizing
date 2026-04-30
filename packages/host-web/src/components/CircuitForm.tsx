@@ -27,6 +27,7 @@ import { NeutralLoadToggle } from './circuit/NeutralLoadToggle.js';
 import { OverrideToggle } from './circuit/OverrideToggle.js';
 import {
   ReferenceMethodSelector,
+  coerceReferenceMethodForCableType,
   type ReferenceMethodCode,
 } from './circuit/ReferenceMethodSelector.js';
 
@@ -297,13 +298,13 @@ export function buildCircuitInput(f: FormState): unknown {
   const i2 = f.useI2Override
     ? f.operatingCurrentI2A
     : f.ratedCurrentA * 1.45; // rule of thumb for MCBs; user can override.
+  const methodCode = coerceReferenceMethodForCableType(f.methodCode, f.cableType);
 
   const installation: Record<string, unknown> = {
-    methodCode: f.methodCode,
+    methodCode,
     ambientTempC: f.ambientTempC,
     groupCount: f.groupCount,
-    soilResistivityK_m_W:
-      f.methodCode === 'D1' || f.methodCode === 'D2' ? f.soilResistivityK_m_W : null,
+    soilResistivityK_m_W: methodCode === 'D1' || methodCode === 'D2' ? f.soilResistivityK_m_W : null,
   };
 
   // Coerce topology to match the active phase. The form's onChange path

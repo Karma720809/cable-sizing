@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ReferenceMethodSelector } from './ReferenceMethodSelector.js';
 
@@ -61,20 +61,86 @@ describe('ReferenceMethodSelector — Hybrid (CR-OQ-6)', () => {
     expect(c.disabled).toBe(false);
   });
 
-  it('preserves the currently selected value even when filter would hide it', () => {
-    // cableType=multicore but value=F (single-core method) — selector still shows F
-    // so the user is not confused by an empty/wrong selection.
+  it('auto-selects a compatible method when a multicore method becomes stale for single-core', async () => {
+    const onChange = vi.fn();
+    const { rerender } = render(
+      <ReferenceMethodSelector
+        cableType="multicore"
+        value="C"
+        onChange={onChange}
+      />,
+    );
+
+    rerender(
+      <ReferenceMethodSelector
+        cableType="single-core"
+        value="C"
+        onChange={onChange}
+      />,
+    );
+
+    await waitFor(() => expect(onChange).toHaveBeenCalledWith('B1'));
+    const select = screen.getByTestId('reference-method-select') as HTMLSelectElement;
+    expect(select.value).toBe('B1');
+  });
+
+  it('auto-selects a compatible method when a single-core method becomes stale for multicore', async () => {
+    const onChange = vi.fn();
+    const { rerender } = render(
+      <ReferenceMethodSelector
+        cableType="single-core"
+        value="F"
+        onChange={onChange}
+      />,
+    );
+
+    rerender(
+      <ReferenceMethodSelector
+        cableType="multicore"
+        value="F"
+        onChange={onChange}
+      />,
+    );
+
+    await waitFor(() => expect(onChange).toHaveBeenCalledWith('B2'));
+    const select = screen.getByTestId('reference-method-select') as HTMLSelectElement;
+    expect(select.value).toBe('B2');
+  });
+
+  it('does not keep a disabled show-all method as the active selection', async () => {
+    const onChange = vi.fn();
     render(
       <ReferenceMethodSelector
         cableType="multicore"
         value="F"
-        onChange={() => {}}
+        onChange={onChange}
+        showAll
       />,
     );
-    const opts = within(
-      screen.getByTestId('reference-method-select'),
-    ).getAllByRole('option') as HTMLOptionElement[];
-    expect(opts.some((o) => o.value === 'F')).toBe(true);
+    await waitFor(() => expect(onChange).toHaveBeenCalledWith('B2'));
+
+    const select = screen.getByTestId('reference-method-select') as HTMLSelectElement;
+    const opts = within(select).getAllByRole('option') as HTMLOptionElement[];
+    const f = opts.find((o) => o.value === 'F')!;
+    const selected = opts.find((o) => o.value === select.value)!;
+    expect(f.disabled).toBe(true);
+    expect(select.value).toBe('B2');
+    expect(selected.disabled).toBe(false);
+  });
+
+  it('keeps an existing valid method selection when still compatible', () => {
+    const onChange = vi.fn();
+    render(
+      <ReferenceMethodSelector
+        cableType="multicore"
+        value="E"
+        onChange={onChange}
+      />,
+    );
+
+    const select = screen.getByTestId('reference-method-select') as HTMLSelectElement;
+    expect(select.value).toBe('E');
+    expect(onChange).not.toHaveBeenCalled();
   });
 
   it('emits the selected method via onChange', async () => {

@@ -119,6 +119,28 @@ const METHODS: ReadonlyArray<MethodMeta> = [
   },
 ];
 
+export function isReferenceMethodCompatible(
+  methodCode: ReferenceMethodCode,
+  cableType: CableTypeForMethod,
+): boolean {
+  return METHODS.some((m) => m.code === methodCode && m.appliesTo.includes(cableType));
+}
+
+export function defaultReferenceMethodForCableType(
+  cableType: CableTypeForMethod,
+): ReferenceMethodCode {
+  return METHODS.find((m) => m.common && m.appliesTo.includes(cableType))!.code;
+}
+
+export function coerceReferenceMethodForCableType(
+  methodCode: ReferenceMethodCode,
+  cableType: CableTypeForMethod,
+): ReferenceMethodCode {
+  return isReferenceMethodCompatible(methodCode, cableType)
+    ? methodCode
+    : defaultReferenceMethodForCableType(cableType);
+}
+
 interface Props {
   cableType: CableTypeForMethod;
   value: ReferenceMethodCode;
@@ -142,25 +164,26 @@ export function ReferenceMethodSelector({
     else setShowAllState(next);
   };
 
+  const coercedValue = coerceReferenceMethodForCableType(value, cableType);
+
+  React.useEffect(() => {
+    if (coercedValue !== value) onChange(coercedValue);
+  }, [coercedValue, onChange, value]);
+
   const visible = showAll
     ? METHODS
     : METHODS.filter((m) => m.common && m.appliesTo.includes(cableType));
-
-  // If the current value would be hidden by the filter, fall back to
-  // showing all so the user does not see an empty/wrong selection.
-  const valueIsVisible = visible.some((m) => m.code === value);
-  const renderList = valueIsVisible ? visible : [...visible, METHODS.find((m) => m.code === value)!];
 
   return (
     <div className="ref-method-selector" data-testid="reference-method-selector">
       <label className="field">
         <span>Reference method</span>
         <select
-          value={value}
+          value={coercedValue}
           onChange={(e) => onChange(e.target.value as ReferenceMethodCode)}
           data-testid="reference-method-select"
         >
-          {renderList.map((m) => {
+          {visible.map((m) => {
             const incompatible = !m.appliesTo.includes(cableType);
             return (
               <option
