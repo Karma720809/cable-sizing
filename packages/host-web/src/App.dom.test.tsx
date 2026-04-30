@@ -25,6 +25,7 @@ vi.mock('./hooks/useEngineWorker.js', () => ({
 }));
 
 beforeEach(() => {
+  vi.clearAllMocks();
   worker.ping.mockResolvedValue({
     ok: true,
     type: 'pong',
@@ -105,5 +106,64 @@ describe('App stale result handling', () => {
     await waitFor(() => {
       expect(screen.queryByTestId('recommended-csa')).not.toBeInTheDocument();
     });
+  });
+});
+
+describe('App short-circuit omission UX', () => {
+  it('toggle off submits null short-circuit values and does not show zero-value validation errors', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByLabelText('Evaluate short-circuit withstand'));
+    await user.click(screen.getByRole('button', { name: /size cable/i }));
+
+    await waitFor(() => {
+      expect(worker.sizeCable).toHaveBeenCalled();
+    });
+    const input = worker.sizeCable.mock.calls.at(-1)?.[0] as {
+      protection: { shortCircuitKA: number | null; tripTimeS: number | null };
+    };
+    expect(input.protection.shortCircuitKA).toBeNull();
+    expect(input.protection.tripTimeS).toBeNull();
+    expect(await screen.findByTestId('recommended-csa')).toBeInTheDocument();
+    expect(screen.queryByText('E-VAL-011')).not.toBeInTheDocument();
+    expect(screen.queryByText('E-VAL-012')).not.toBeInTheDocument();
+  });
+
+  it('toggle on with Isc = 0 shows invalid short-circuit current', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.clear(screen.getByLabelText('Isc (kA)'));
+    await user.click(screen.getByRole('button', { name: /size cable/i }));
+
+    expect(await screen.findByTestId('errors')).toBeInTheDocument();
+    expect(screen.getByText('E-VAL-011')).toBeInTheDocument();
+  });
+
+  it('toggle on with tripTimeS = 0 shows invalid trip time', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.clear(screen.getByLabelText('Trip time (s)'));
+    await user.click(screen.getByRole('button', { name: /size cable/i }));
+
+    expect(await screen.findByTestId('errors')).toBeInTheDocument();
+    expect(screen.getByText('E-VAL-012')).toBeInTheDocument();
+  });
+
+  it('toggle on with Isc = 1 and tripTimeS = 0.1 is valid', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.clear(screen.getByLabelText('Isc (kA)'));
+    await user.type(screen.getByLabelText('Isc (kA)'), '1');
+    await user.clear(screen.getByLabelText('Trip time (s)'));
+    await user.type(screen.getByLabelText('Trip time (s)'), '0.1');
+    await user.click(screen.getByRole('button', { name: /size cable/i }));
+
+    expect(await screen.findByTestId('recommended-csa')).toBeInTheDocument();
+    expect(screen.queryByText('E-VAL-011')).not.toBeInTheDocument();
+    expect(screen.queryByText('E-VAL-012')).not.toBeInTheDocument();
   });
 });

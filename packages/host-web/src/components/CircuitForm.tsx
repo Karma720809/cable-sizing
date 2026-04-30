@@ -122,6 +122,7 @@ export interface FormState {
   ratedCurrentA: number;
   useI2Override: boolean;
   operatingCurrentI2A: number;
+  evaluateShortCircuit: boolean;
   tripTimeS: number;
   shortCircuitKA: number;
 
@@ -213,6 +214,8 @@ export const INITIAL_FORM: FormState = {
   ratedCurrentA: DEFAULT_INPUT.protection.ratedCurrentA,
   useI2Override: false,
   operatingCurrentI2A: DEFAULT_INPUT.protection.operatingCurrentI2A,
+  evaluateShortCircuit:
+    DEFAULT_INPUT.protection.shortCircuitKA != null || DEFAULT_INPUT.protection.tripTimeS != null,
   tripTimeS: DEFAULT_INPUT.protection.tripTimeS,
   shortCircuitKA: DEFAULT_INPUT.protection.shortCircuitKA,
 
@@ -355,8 +358,8 @@ export function buildCircuitInput(f: FormState): unknown {
       deviceType: f.deviceType,
       ratedCurrentA: f.ratedCurrentA,
       operatingCurrentI2A: i2,
-      tripTimeS: f.tripTimeS,
-      shortCircuitKA: f.shortCircuitKA,
+      tripTimeS: f.evaluateShortCircuit ? f.tripTimeS : null,
+      shortCircuitKA: f.evaluateShortCircuit ? f.shortCircuitKA : null,
     },
     projectPolicy: {
       maxVoltageDropPercent: f.maxVoltageDropPercent,
@@ -724,18 +727,29 @@ function LvFields({
           set={(s) => set('deviceType', s as FormState['deviceType'])}
         />
         <NumField label="Rated In (A)" v={value.ratedCurrentA} set={(n) => set('ratedCurrentA', n)} />
-        <NumField
-          label="Isc (kA)"
-          v={value.shortCircuitKA}
-          step={0.1}
-          set={(n) => set('shortCircuitKA', n)}
+        <CheckField
+          label="Evaluate short-circuit withstand"
+          v={value.evaluateShortCircuit}
+          set={(b) => set('evaluateShortCircuit', b)}
         />
-        <NumField
-          label="Trip time (s)"
-          v={value.tripTimeS}
-          step={0.01}
-          set={(n) => set('tripTimeS', n)}
-        />
+        <p className="muted">Turn off this check if short-circuit data is not available.</p>
+        <p className="muted">When enabled, Isc and trip time must be greater than 0.</p>
+        {value.evaluateShortCircuit && (
+          <>
+            <NumField
+              label="Isc (kA)"
+              v={value.shortCircuitKA}
+              step={0.1}
+              set={(n) => set('shortCircuitKA', n)}
+            />
+            <NumField
+              label="Trip time (s)"
+              v={value.tripTimeS}
+              step={0.01}
+              set={(n) => set('tripTimeS', n)}
+            />
+          </>
+        )}
         <AdvancedGroup>
           <CheckField
             label="Override I₂ (default: 1.45·In)"

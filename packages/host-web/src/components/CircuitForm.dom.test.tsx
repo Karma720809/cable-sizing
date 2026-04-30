@@ -110,3 +110,28 @@ describe('CircuitForm phase/topology coherence', () => {
     });
   });
 });
+
+describe('CircuitForm short-circuit evaluation toggle', () => {
+  it('submits null short-circuit values and hides inputs when the check is off', async () => {
+    const { user, submitted } = renderTrackedForm();
+
+    await user.click(screen.getByLabelText('Evaluate short-circuit withstand'));
+
+    expect(screen.queryByLabelText('Isc (kA)')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Trip time (s)')).not.toBeInTheDocument();
+    expect(
+      screen.getByText('Turn off this check if short-circuit data is not available.'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('When enabled, Isc and trip time must be greater than 0.'),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /size cable/i }));
+
+    const input = submitted() as {
+      protection: { shortCircuitKA: number | null; tripTimeS: number | null };
+    };
+    expect(input.protection.shortCircuitKA).toBeNull();
+    expect(input.protection.tripTimeS).toBeNull();
+  });
+});
