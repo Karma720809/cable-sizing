@@ -8,7 +8,7 @@
     "cable": { "conductorMaterial": "Cu", "insulationType": "PVC", "coreConfiguration": "3C+N", "cableType": "multicore" },
     "installation": { "methodCode": "D1", "ambientTempC": 20, "soilResistivityK_m_W": 2.5, "groupCount": 1 },
     "route": { "lengthM": 250 },
-    "protection": { "deviceType": "MCCB", "ratedCurrentA": 100, "operatingCurrentI2A": 145, "tripTimeS": 0.1, "shortCircuitKA": 0 },
+    "protection": { "deviceType": "MCCB", "ratedCurrentA": 100, "operatingCurrentI2A": 145, "tripTimeS": 0.1, "shortCircuitKA": null },
     "projectPolicy": { "maxVoltageDropPercent": 3, "useReactance": false, "resistanceModel": "fixed_reference", "roundingPolicy": "next_standard_csa" }
   },
   "expected": {

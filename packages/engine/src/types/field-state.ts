@@ -52,6 +52,10 @@ export type FieldReason =
   | 'out_of_range'
   | 'loaded_conductors_override_out_of_range'
   | 'armour_csa_override_must_be_positive'
+  | 'missing_transformer_kva'
+  | 'transformer_kva_must_be_positive'
+  | 'short_circuit_current_must_be_positive'
+  | 'trip_time_must_be_positive'
   | 'default_fallback'
   | 'override_applied'
   | 'legacy_preserved_no_recalc';

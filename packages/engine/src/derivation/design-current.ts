@@ -138,24 +138,37 @@ export function deriveDesignCurrent(input: CircuitInput): DeriveDesignCurrentRes
   // 3b. transformer + kVA → IB = (kVA·1000)/(√3·V) · df (or /V for 1φ)
   if (input.load.type === 'transformer') {
     const kva = input.load.kva;
-    if (typeof kva === 'number' && Number.isFinite(kva) && kva > 0 && voltageV > 0) {
-      const sqrt3 = new Decimal(3).sqrt();
-      const denom = phase === 3 ? sqrt3.mul(voltageV) : new Decimal(voltageV);
-      const ib = new Decimal(kva).mul(1000).div(denom).mul(df).toNumber();
+    if (typeof kva === 'number' && Number.isFinite(kva)) {
       const formulaId = phase === 3 ? FORMULA_IDS.IB_3PH_KVA : FORMULA_IDS.IB_1PH_KVA;
       const formula =
         phase === 3 ? 'IB = (kVA·1000)/(√3·V) · df' : 'IB = (kVA·1000)/V · df';
       const inputs = { kva, voltageV, phase, demandFactor: df, formula };
+      if (kva > 0 && voltageV > 0) {
+        const sqrt3 = new Decimal(3).sqrt();
+        const denom = phase === 3 ? sqrt3.mul(voltageV) : new Decimal(voltageV);
+        const ib = new Decimal(kva).mul(1000).div(denom).mul(df).toNumber();
+        return {
+          state: FieldStateBuilder.autoFormula<number>(ib, formulaId, inputs),
+          designCurrentA: ib,
+          warnings,
+          intermediate: { ...inputs, I_B: ib },
+        };
+      }
+
       return {
-        state: FieldStateBuilder.autoFormula<number>(ib, formulaId, inputs),
-        designCurrentA: ib,
+        state: FieldStateBuilder.invalid<number>(
+          'auto_formula',
+          'transformer_kva_must_be_positive',
+          { formula: formulaId, inputs },
+        ),
+        designCurrentA: null,
         warnings,
-        intermediate: { ...inputs, I_B: ib },
+        intermediate: { ...inputs, I_B: null },
       };
     }
     // kva missing on transformer — treat as incomplete
     return {
-      state: FieldStateBuilder.incomplete('missing_input'),
+      state: FieldStateBuilder.incomplete('missing_transformer_kva'),
       designCurrentA: null,
       warnings,
       intermediate: { reason: 'transformer requires kva input' },

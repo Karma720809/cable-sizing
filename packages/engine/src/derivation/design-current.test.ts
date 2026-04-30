@@ -158,6 +158,41 @@ describe('deriveDesignCurrent — transformer', () => {
     expect(r.designCurrentA).toBeCloseTo(217.39, 2);
   });
 
+  it('transformer kva = 0 → invalid', () => {
+    const r = deriveDesignCurrent({
+      ...BASE,
+      load: {
+        type: 'transformer',
+        powerKW: null,
+        powerFactor: null,
+        efficiency: null,
+        demandFactor: 1.0,
+        kva: 0,
+      },
+    });
+    expect(r.state.status).toBe('invalid');
+    expect(r.state.reason).toBe('transformer_kva_must_be_positive');
+    expect(r.state.value).toBeNull();
+    expect(r.designCurrentA).toBeNull();
+  });
+
+  it('transformer kva < 0 → invalid', () => {
+    const r = deriveDesignCurrent({
+      ...BASE,
+      load: {
+        type: 'transformer',
+        powerKW: null,
+        powerFactor: null,
+        efficiency: null,
+        demandFactor: 1.0,
+        kva: -10,
+      },
+    });
+    expect(r.state.status).toBe('invalid');
+    expect(r.state.reason).toBe('transformer_kva_must_be_positive');
+    expect(r.designCurrentA).toBeNull();
+  });
+
   it('transformer without kva → incomplete', () => {
     const r = deriveDesignCurrent({
       ...BASE,
@@ -170,7 +205,24 @@ describe('deriveDesignCurrent — transformer', () => {
       },
     });
     expect(r.state.status).toBe('incomplete');
-    expect(r.state.reason).toBe('missing_input');
+    expect(r.state.reason).toBe('missing_transformer_kva');
+    expect(r.designCurrentA).toBeNull();
+  });
+
+  it('transformer kva null → incomplete, not invalid', () => {
+    const r = deriveDesignCurrent({
+      ...BASE,
+      load: {
+        type: 'transformer',
+        powerKW: null,
+        powerFactor: null,
+        efficiency: null,
+        demandFactor: 1.0,
+        kva: null,
+      },
+    });
+    expect(r.state.status).toBe('incomplete');
+    expect(r.state.reason).toBe('missing_transformer_kva');
     expect(r.designCurrentA).toBeNull();
   });
 });

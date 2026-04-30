@@ -17,6 +17,8 @@
  *   E-VAL-008  efficiency / demandFactor out of (0, 1]
  *   E-VAL-009  maxVoltageDropPercent must be > 0
  *   E-VAL-010  invalid phase (not 1 or 3) or frequency (not 50 or 60)
+ *   E-VAL-011  shortCircuitKA provided but must be > 0
+ *   E-VAL-012  tripTimeS provided but must be > 0
  *
  * (E-DOMAIN-001 — efficiency = 0 — is subsumed by E-VAL-008.)
  */
@@ -67,13 +69,9 @@ export function validateCircuitInput(input: CircuitInput): EngineError[] {
   // so the derivation module can emit FieldState.status=incomplete/invalid
   // (instead of masking it with an input-validation fatal error).
   const hasFlaField = input.load.type === 'motor';
-  const hasKva =
-    input.load.type === 'transformer' &&
-    typeof input.load.kva === 'number' &&
-    Number.isFinite(input.load.kva) &&
-    input.load.kva > 0;
+  const hasKvaField = input.load.type === 'transformer';
 
-  const hasLoadSpec = hasOverrideProvided || hasFlaField || hasKva;
+  const hasLoadSpec = hasOverrideProvided || hasFlaField || hasKvaField;
   if (!hasLoadSpec && (input.load.powerKW == null || !(input.load.powerKW > 0))) {
     push(
       errors,
@@ -103,6 +101,21 @@ export function validateCircuitInput(input: CircuitInput): EngineError[] {
   // E-VAL-005
   if (!(input.route.lengthM > 0)) {
     push(errors, 'E-VAL-005', 'route.lengthM must be > 0', 'route.lengthM');
+  }
+
+  // E-VAL-011 / E-VAL-012 — SC inputs are optional only when blank/null.
+  // Explicit non-positive values are user input and must not be treated
+  // as "not provided" by the short-circuit step.
+  if (input.protection.shortCircuitKA != null && !(input.protection.shortCircuitKA > 0)) {
+    push(
+      errors,
+      'E-VAL-011',
+      'short_circuit_current_must_be_positive',
+      'protection.shortCircuitKA',
+    );
+  }
+  if (input.protection.tripTimeS != null && !(input.protection.tripTimeS > 0)) {
+    push(errors, 'E-VAL-012', 'trip_time_must_be_positive', 'protection.tripTimeS');
   }
 
   // E-VAL-006
