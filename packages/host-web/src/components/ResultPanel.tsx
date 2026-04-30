@@ -171,6 +171,12 @@ export function ResultPanel({ res }: { res: WorkerResponse | null }): React.Reac
 // ─── Criteria table ───────────────────────────────────────────────────
 
 function Criteria({ r }: { r: SizingResult }): React.ReactElement {
+  const ampacityEvaluated = isAmpacityEvaluated(r);
+  const voltageDropEvaluated = r.voltageDrop.calculatedDropPercent != null;
+  const shortCircuitEvaluated = r.shortCircuit.minimumCSAmm2 != null && r.shortCircuit.kValue > 0;
+  const protectionEvaluated =
+    r.recommendedCSAmm2 != null && r.protectionCoordination.cableAmpacityIzA > 0;
+
   return (
     <table className="criteria" aria-label="Criteria">
       <thead>
@@ -187,8 +193,14 @@ function Criteria({ r }: { r: SizingResult }): React.ReactElement {
             <StatusChip s={r.ampacity.status} />
           </td>
           <td>
-            IZ = {round(r.ampacity.cableRatingA, 1)} A @ {r.ampacity.selectedCSAmm2 ?? '—'}{' '}
-            mm² (k<sub>total</sub> = {r.ampacity.correctionFactors.total.toFixed(3)})
+            {ampacityEvaluated ? (
+              <>
+                IZ = {round(r.ampacity.cableRatingA, 1)} A @ {r.ampacity.selectedCSAmm2}{' '}
+                mm² (k<sub>total</sub> = {r.ampacity.correctionFactors.total.toFixed(3)})
+              </>
+            ) : (
+              <span className="muted">Not evaluated</span>
+            )}
           </td>
         </tr>
         <tr>
@@ -197,8 +209,14 @@ function Criteria({ r }: { r: SizingResult }): React.ReactElement {
             <StatusChip s={r.voltageDrop.status} />
           </td>
           <td>
-            ΔU = {round(r.voltageDrop.calculatedDropPercent, 3)} % (limit{' '}
-            {r.voltageDrop.maxAllowedPercent} %)
+            {voltageDropEvaluated ? (
+              <>
+                ΔU = {round(r.voltageDrop.calculatedDropPercent, 3)} % (limit{' '}
+                {r.voltageDrop.maxAllowedPercent} %)
+              </>
+            ) : (
+              <span className="muted">Not evaluated</span>
+            )}
           </td>
         </tr>
         <tr>
@@ -207,8 +225,14 @@ function Criteria({ r }: { r: SizingResult }): React.ReactElement {
             <StatusChip s={r.shortCircuit.status} />
           </td>
           <td>
-            S<sub>req</sub> = {round(r.shortCircuit.minimumCSAmm2, 2)} mm² (k ={' '}
-            {r.shortCircuit.kValue})
+            {shortCircuitEvaluated ? (
+              <>
+                S<sub>req</sub> = {round(r.shortCircuit.minimumCSAmm2, 2)} mm² (k ={' '}
+                {r.shortCircuit.kValue})
+              </>
+            ) : (
+              <span className="muted">Not evaluated</span>
+            )}
           </td>
         </tr>
         <tr>
@@ -217,8 +241,14 @@ function Criteria({ r }: { r: SizingResult }): React.ReactElement {
             <StatusChip s={r.protectionCoordination.status} />
           </td>
           <td>
-            C1 (IB≤In≤IZ): <Ok p={r.protectionCoordination.condition1.pass} /> — C2
-            (I₂≤1.45·IZ): <Ok p={r.protectionCoordination.condition2.pass} />
+            {protectionEvaluated ? (
+              <>
+                C1 (IB≤In≤IZ): <Ok p={r.protectionCoordination.condition1.pass} /> — C2
+                (I₂≤1.45·IZ): <Ok p={r.protectionCoordination.condition2.pass} />
+              </>
+            ) : (
+              <span className="muted">Not evaluated</span>
+            )}
           </td>
         </tr>
       </tbody>
@@ -300,6 +330,14 @@ function CodeChip({ code }: { code: string }): React.ReactElement {
 function round(n: number | null | undefined, d: number): string {
   if (n == null || !Number.isFinite(n)) return '—';
   return n.toFixed(d);
+}
+
+function isAmpacityEvaluated(r: SizingResult): boolean {
+  if (r.fieldStates?.kTotal) {
+    return r.fieldStates.kTotal.status === 'valid' && r.ampacity.selectedCSAmm2 != null;
+  }
+
+  return r.ampacity.selectedCSAmm2 != null && r.ampacity.cableRatingA != null;
 }
 
 // ─── MV result rendering ──────────────────────────────────────────────
