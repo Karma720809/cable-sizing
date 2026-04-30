@@ -348,6 +348,17 @@ code {
   border-color: var(--incomplete);
 }
 
+.mini-warning,
+.mini-info {
+  color: var(--warn);
+  border-color: var(--warn);
+}
+
+.mini-invalid {
+  color: var(--fail);
+  border-color: var(--fail);
+}
+
 /* Result — code chip with tooltip */
 .code-chip {
   color: var(--accent);

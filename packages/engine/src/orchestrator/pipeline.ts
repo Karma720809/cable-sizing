@@ -941,7 +941,7 @@ export function sizeCable(input: CircuitInput, options: SizeCableOptions = {}): 
     if (armRes.warnings.length > 0) warnings.push(...armRes.warnings);
     if (armRes.armour) {
       audit.add({
-        criterion: 'shortCircuit',
+        criterion: 'armour',
         inputs: {
           armourType: armRes.armour.armourType,
           cableConstruction: armRes.armour.cableConstruction,
@@ -952,12 +952,22 @@ export function sizeCable(input: CircuitInput, options: SizeCableOptions = {}): 
           armourCsaMm2: armRes.armour.armourCsaMm2,
           kArmour: armRes.armour.kArmour,
           source: armRes.state.source,
+          status: armRes.state.status,
+          reason: armRes.state.reason ?? null,
+          datasetRef: armRes.state.datasetRef ?? armRes.armour.sourceRef,
         },
         decision: 'INFO',
         reason:
           armRes.state.source === 'override'
             ? `armour CSA overridden to ${armRes.armour.armourCsaMm2} mm²`
             : `armour CSA ${armRes.armour.armourCsaMm2} mm² resolved from ${armRes.armour.sourceRef}`,
+        derivedFields: [
+          {
+            fieldId: 'armourCsa',
+            state: armRes.state,
+            description: 'Armour CSA / k_armour lookup state',
+          },
+        ],
       });
       if (scA > 0 && tA > 0) {
         // S_arm_req = sqrt(I_fault² · t) / k_arm = I_fault · √t / k_arm
@@ -971,7 +981,7 @@ export function sizeCable(input: CircuitInput, options: SizeCableOptions = {}): 
           });
         }
         audit.add({
-          criterion: 'shortCircuit',
+          criterion: 'armour',
           inputs: { Isc: scA, tripTimeS: tA, kArmour: armRes.armour.kArmour },
           formula: 'S_arm_req = Isc·√t / k_arm',
           intermediateValues: {
@@ -988,7 +998,7 @@ export function sizeCable(input: CircuitInput, options: SizeCableOptions = {}): 
       }
     } else {
       audit.add({
-        criterion: 'shortCircuit',
+        criterion: 'armour',
         inputs: {
           armourType: input.cable.armourType,
           conductorCsaMm2: recommended,
@@ -997,6 +1007,10 @@ export function sizeCable(input: CircuitInput, options: SizeCableOptions = {}): 
         intermediateValues: {
           armourCsaStatus: armRes.state.status,
           armourCsaReason: armRes.state.reason ?? null,
+          source: armRes.state.source,
+          status: armRes.state.status,
+          reason: armRes.state.reason ?? null,
+          datasetRef: armRes.state.datasetRef ?? null,
         },
         decision: armRes.state.status === 'invalid' ? 'FAIL' : 'INCOMPLETE',
         reason:

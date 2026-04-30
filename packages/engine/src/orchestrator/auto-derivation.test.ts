@@ -203,6 +203,15 @@ describe('AC-9: Armour CSA derivation', () => {
     expect(fs?.status).toBe('valid');
     expect((fs?.value as { kArmour?: number })?.kArmour).toBe(51);
     expect(r.warnings.find((w) => w.code === 'W-CR-009')).toBeUndefined();
+    const armourSteps = r.auditTrail.filter((step) => step.criterion === 'armour');
+    expect(armourSteps.length).toBeGreaterThan(0);
+    expect(
+      armourSteps.find(
+        (step) =>
+          step.formula === 'armour CSA lookup (cableConstruction, conductorCsaMm2)' &&
+          step.derivedFields?.some((field) => field.fieldId === 'armourCsa'),
+      ),
+    ).toBeDefined();
   });
 
   it('armourType=none → fieldStates.armourCsa unavailable', () => {
@@ -228,7 +237,10 @@ describe('AC-9: Armour CSA derivation', () => {
     expect(r.warnings.find((w) => w.code === 'W-CR-009')).toBeDefined();
     expect(
       r.auditTrail.find(
-        (step) => step.code === 'W-CR-009' && step.decision === 'INCOMPLETE',
+        (step) =>
+          step.criterion === 'armour' &&
+          step.code === 'W-CR-009' &&
+          step.decision === 'INCOMPLETE',
       ),
     ).toBeDefined();
     expect(

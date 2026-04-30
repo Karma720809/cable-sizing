@@ -176,6 +176,7 @@ function Criteria({ r }: { r: SizingResult }): React.ReactElement {
   const shortCircuitEvaluated = r.shortCircuit.minimumCSAmm2 != null && r.shortCircuit.kValue > 0;
   const protectionEvaluated =
     r.recommendedCSAmm2 != null && r.protectionCoordination.cableAmpacityIzA > 0;
+  const armourSummary = getArmourSummary(r);
 
   return (
     <table className="criteria" aria-label="Criteria">
@@ -235,6 +236,15 @@ function Criteria({ r }: { r: SizingResult }): React.ReactElement {
             )}
           </td>
         </tr>
+        {armourSummary && (
+          <tr data-testid="armour-criteria-row">
+            <td>Armour</td>
+            <td>
+              <StatusChip s={armourSummary.status} />
+            </td>
+            <td>{armourSummary.detail}</td>
+          </tr>
+        )}
         <tr>
           <td>Protection coord.</td>
           <td>
@@ -317,6 +327,54 @@ function Ok({ p }: { p: boolean | null }): React.ReactElement {
   ) : (
     <span className="mini-chip mini-fail">FAIL</span>
   );
+}
+
+function getArmourSummary(
+  r: SizingResult,
+): { status: 'PASS' | 'INFO' | 'WARNING' | 'INCOMPLETE' | 'FAIL' | 'INVALID'; detail: React.ReactNode } | null {
+  const state = r.fieldStates?.armourCsa;
+  const armourSteps = r.auditTrail.filter((s) => s.criterion === 'armour');
+  const armourWarning = r.warnings.find((w) => w.code === 'W-CR-007' || w.code === 'W-CR-009');
+
+  if (!state && armourSteps.length === 0 && !armourWarning) return null;
+
+  if (state?.status === 'valid') {
+    const value = state.value as { armourCsaMm2?: number; kArmour?: number } | null;
+    const scStep = armourSteps.find((s) => s.formula === 'S_arm_req = Isc·√t / k_arm');
+    const status = scStep?.decision === 'WARNING' ? 'WARNING' : scStep?.decision === 'PASS' ? 'PASS' : 'INFO';
+    return {
+      status,
+      detail: (
+        <>
+          Armour CSA = {round(value?.armourCsaMm2, 2)} mm², k_armour ={' '}
+          {round(value?.kArmour, 0)}
+          {state.source === 'override' ? ' (override)' : ''}
+        </>
+      ),
+    };
+  }
+
+  if (state?.status === 'invalid') {
+    return {
+      status: 'INVALID',
+      detail: (
+        <>
+          Armour verification not evaluated; reason = {state.reason ?? 'invalid override'}
+        </>
+      ),
+    };
+  }
+
+  const reason =
+    state?.reason ??
+    (armourWarning?.code === 'W-CR-009' ? armourWarning.message : undefined) ??
+    armourSteps.find((s) => s.decision === 'INCOMPLETE' || s.decision === 'WARNING')?.reason ??
+    'unavailable';
+
+  return {
+    status: armourWarning?.code === 'W-CR-009' ? 'WARNING' : 'INCOMPLETE',
+    detail: <>Armour verification not evaluated; reason = {reason}</>,
+  };
 }
 
 function CodeChip({ code }: { code: string }): React.ReactElement {

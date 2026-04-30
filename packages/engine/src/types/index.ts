@@ -351,6 +351,7 @@ export type AuditCriterion =
   | 'ampacity'
   | 'voltageDrop'
   | 'shortCircuit'
+  | 'armour'
   | 'recommended'
   | 'protection'
   | 'overall';
