@@ -18,6 +18,7 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { handleWorkerMessage } from '@cable-sizing/engine';
 import { ResultPanel } from './ResultPanel.js';
+import { DiagnosticsPanel } from './DiagnosticsPanel.js';
 import {
   CircuitForm,
   INITIAL_FORM,
@@ -33,6 +34,12 @@ function runEngine(form: FormState = INITIAL_FORM) {
     type: 'sizeCable',
     input: buildCircuitInput(form),
   });
+}
+
+function resultFrom(form: FormState = INITIAL_FORM) {
+  const res = runEngine(form);
+  if (!(res.ok && res.type === 'sizeCable:result')) throw new Error('expected LV result');
+  return res.data.result;
 }
 
 describe('ResultPanel — default form', () => {
@@ -58,6 +65,91 @@ describe('ResultPanel — default form', () => {
     const audit = screen.getByTestId('audit-trail');
     // Summary text carries the step count: "Audit trail (N steps)"
     expect(audit.textContent).toMatch(/Audit trail \(\d+ steps\)/);
+  });
+});
+
+describe('ResultPanel — armour visibility', () => {
+  it('does not show Armour row when armourType is none', () => {
+    render(<ResultPanel res={runEngine({ ...INITIAL_FORM, armourType: 'none' })} />);
+
+    expect(screen.queryByTestId('armour-criteria-row')).not.toBeInTheDocument();
+  });
+
+  it('shows dataset armour details and armour audit criterion for SWA', () => {
+    const form = { ...INITIAL_FORM, armourType: 'SWA' as const, insulationType: 'XLPE' as const };
+    const res = runEngine(form);
+    render(<ResultPanel res={res} />);
+
+    const row = screen.getByTestId('armour-criteria-row');
+    expect(row.textContent).toMatch(/Armour CSA = \d+\.\d{2} mm², k_armour = \d+/);
+
+    const result = resultFrom(form);
+    expect(result.auditTrail.some((step) => step.criterion === 'armour')).toBe(true);
+    expect(
+      result.auditTrail.some(
+        (step) =>
+          step.criterion === 'armour' &&
+          JSON.stringify(step.intermediateValues).includes('kArmour'),
+      ),
+    ).toBe(true);
+  });
+
+  it('shows unavailable armour verification with W-CR-009', () => {
+    const form = { ...INITIAL_FORM, armourType: 'SWA' as const, coreConfiguration: '4C' as const };
+    const res = runEngine(form);
+    render(<ResultPanel res={res} />);
+
+    const row = screen.getByTestId('armour-criteria-row');
+    expect(row.textContent).toContain('WARNING');
+    expect(row.textContent).toMatch(/Armour verification not evaluated/i);
+    expect(screen.getAllByText('W-CR-009').length).toBeGreaterThan(0);
+
+    const result = resultFrom(form);
+    expect(
+      result.auditTrail.some(
+        (step) =>
+          step.criterion === 'armour' &&
+          (step.decision === 'INCOMPLETE' || step.decision === 'WARNING'),
+      ),
+    ).toBe(true);
+  });
+
+  it('shows valid armour override details and keeps the override warning', () => {
+    render(
+      <ResultPanel
+        res={runEngine({
+          ...INITIAL_FORM,
+          armourType: 'SWA',
+          useArmourOverride: true,
+          armourCsaOverride: 200,
+        })}
+      />,
+    );
+
+    const row = screen.getByTestId('armour-criteria-row');
+    expect(row.textContent).toContain('Armour CSA = 200.00 mm²');
+    expect(row.textContent).toContain('(override)');
+    expect(screen.getByText('W-CR-004')).toBeInTheDocument();
+  });
+
+  it('shows invalid armour override as not evaluated without dataset fallback', () => {
+    const form = {
+      ...INITIAL_FORM,
+      armourType: 'SWA' as const,
+      useArmourOverride: true,
+      armourCsaOverride: 0,
+    };
+    const res = runEngine(form);
+    render(<ResultPanel res={res} />);
+
+    const row = screen.getByTestId('armour-criteria-row');
+    expect(row.textContent).toContain('INVALID');
+    expect(row.textContent).toMatch(/Armour verification not evaluated/i);
+    expect(row.textContent).toContain('armour_csa_override_must_be_positive');
+
+    const result = resultFrom(form);
+    expect(result.fieldStates?.armourCsa?.source).toBe('override');
+    expect(result.fieldStates?.armourCsa?.value).toBeNull();
   });
 });
 
@@ -97,6 +189,40 @@ describe('ResultPanel — code chip tooltips (E-2)', () => {
     for (const el of codeEls) {
       expect(el.getAttribute('title')).toBeTruthy();
     }
+  });
+});
+
+describe('ResultPanel and DiagnosticsPanel — incomplete result display', () => {
+  it('does not render skeleton k defaults as normal ResultPanel values', () => {
+    const res = runEngine({ ...INITIAL_FORM, loadType: 'transformer', kva: 0 });
+    render(<ResultPanel res={res} />);
+
+    const table = screen.getByRole('table', { name: /criteria/i });
+    expect(table.textContent).not.toContain('k = 0');
+    expect(table.textContent).not.toContain('1.000');
+    expect(within(table).getAllByText(/Not evaluated/i).length).toBeGreaterThan(0);
+  });
+
+  it('does not render correction factors as evaluated in DiagnosticsPanel for skeleton results', () => {
+    const result = resultFrom({ ...INITIAL_FORM, loadType: 'transformer', kva: 0 });
+    render(<DiagnosticsPanel pong={null} manifest={null} lastResult={result} />);
+
+    expect(screen.getByText(/Not evaluated/i)).toBeInTheDocument();
+    expect(document.body.textContent).not.toContain('1 · 1 · 1 = 1.000');
+  });
+
+  it('preserves normal k_total and short-circuit k display for completed results', () => {
+    const result = resultFrom();
+    const { rerender } = render(<ResultPanel res={runEngine()} />);
+
+    const table = screen.getByRole('table', { name: /criteria/i });
+    expect(table.textContent).toContain(result.ampacity.correctionFactors.total.toFixed(3));
+    expect(table.textContent).toContain(`k = ${result.shortCircuit.kValue}`);
+
+    rerender(<DiagnosticsPanel pong={null} manifest={null} lastResult={result} />);
+    expect(document.body.textContent).toContain(
+      result.ampacity.correctionFactors.total.toFixed(3),
+    );
   });
 });
 

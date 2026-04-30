@@ -1,0 +1,31 @@
+{
+  "id": "CSA-GC-04-PROTECTION-GOVERNING",
+  "description": "CSA engineering case: 25 kW Cu/PVC multicore method C run — ampacity initially selects 10 mm2, but protection recheck with In=80 A bumps through 16 mm2 to 25 mm2 where Iz and I2 coordination pass.",
+  "spec": "CSA Patch 1 / final recommended CSA / protection recheck governing",
+  "input": {
+    "load": { "type": "general", "powerKW": 25, "powerFactor": 0.85, "efficiency": 0.9, "demandFactor": 1.0 },
+    "system": { "voltageV": 400, "phase": 3, "frequencyHz": 50, "topology": "3ph3w" },
+    "cable": { "conductorMaterial": "Cu", "insulationType": "PVC", "coreConfiguration": "3C", "cableType": "multicore" },
+    "installation": { "methodCode": "C", "ambientTempC": 30, "soilResistivityK_m_W": null, "groupCount": 1 },
+    "route": { "lengthM": 20 },
+    "protection": { "deviceType": "MCCB", "ratedCurrentA": 80, "operatingCurrentI2A": 116, "tripTimeS": null, "shortCircuitKA": null },
+    "projectPolicy": { "maxVoltageDropPercent": 5, "useReactance": false, "resistanceModel": "fixed_reference", "roundingPolicy": "next_standard_csa" }
+  },
+  "expected": {
+    "designCurrentApprox": 47.17,
+    "designCurrentTolerance": 0.01,
+    "correctionFactorTotalApprox": 1,
+    "requiredAmpacityApprox": 47.17,
+    "voltageDropPercentApprox": 0.74,
+    "protectionCableAmpacityApprox": 96,
+    "recommendedCSAmm2": 25,
+    "selectionDriver": "protection_recheck",
+    "ampacityStatus": "PASS",
+    "voltageDropStatus": "PASS",
+    "protectionStatus": "PASS",
+    "overallStatus": "WARNING",
+    "warningCodesExact": ["W-PROTECTION-RECHECK"],
+    "errorCodesExact": [],
+    "loadedConductorsUsedExact": 3
+  }
+}

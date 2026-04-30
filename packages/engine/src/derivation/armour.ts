@@ -68,6 +68,14 @@ function lookupArmour(
   return hit ? { armourCsaMm2: hit.armourCsaMm2 } : null;
 }
 
+function armourUnavailableWarning(message: string): Warning {
+  return {
+    code: 'W-CR-009',
+    message,
+    field: 'cable.armourType',
+  };
+}
+
 export function deriveArmour(
   input: CircuitInput,
   dataset: Dataset,
@@ -76,27 +84,39 @@ export function deriveArmour(
   const warnings: Warning[] = [];
 
   // ── 1. Override path ────────────────────────────────────────────────
-  const ov = input.overrides?.armourCsaMm2;
-  if (typeof ov === 'number' && Number.isFinite(ov) && ov > 0) {
-    const armourType: 'SWA' | 'STA' =
-      input.cable.armourType === 'STA' ? 'STA' : 'SWA';
-    const ds = armourType === 'STA' ? dataset.armour?.sta : dataset.armour?.swa;
-    const kArmour = ds?.kArmour ?? 51; // Default per IEC 60364-5-54 if dataset absent.
-    const bundle: ArmourBundle = {
-      armourCsaMm2: ov,
-      kArmour,
-      armourType,
-      sourceRef: 'user override',
-      cableConstruction: buildConstructionKey(input) ?? '<override>',
-    };
-    warnings.push({
-      code: 'W-CR-004',
-      message: `armour CSA overridden to ${ov} mm² (dataset lookup bypassed)`,
-      field: 'overrides.armourCsaMm2',
-    });
+  if (input.overrides && 'armourCsaMm2' in input.overrides) {
+    const ov = input.overrides.armourCsaMm2;
+    if (typeof ov === 'number' && Number.isFinite(ov) && ov > 0) {
+      const armourType: 'SWA' | 'STA' =
+        input.cable.armourType === 'STA' ? 'STA' : 'SWA';
+      const ds = armourType === 'STA' ? dataset.armour?.sta : dataset.armour?.swa;
+      const kArmour = ds?.kArmour ?? 51; // Default per IEC 60364-5-54 if dataset absent.
+      const bundle: ArmourBundle = {
+        armourCsaMm2: ov,
+        kArmour,
+        armourType,
+        sourceRef: 'user override',
+        cableConstruction: buildConstructionKey(input) ?? '<override>',
+      };
+      warnings.push({
+        code: 'W-CR-004',
+        message: `armour CSA overridden to ${ov} mm² (dataset lookup bypassed)`,
+        field: 'overrides.armourCsaMm2',
+      });
+      return {
+        state: FieldStateBuilder.override<ArmourBundle>(bundle),
+        armour: bundle,
+        warnings,
+      };
+    }
+
     return {
-      state: FieldStateBuilder.override<ArmourBundle>(bundle),
-      armour: bundle,
+      state: FieldStateBuilder.invalid<ArmourBundle>(
+        'override',
+        'armour_csa_override_must_be_positive',
+        { inputs: { armourCsaMm2: ov } },
+      ),
+      armour: null,
       warnings,
     };
   }
@@ -118,14 +138,22 @@ export function deriveArmour(
     return {
       state: FieldStateBuilder.unavailable('no_dataset_match'),
       armour: null,
-      warnings,
+      warnings: [
+        armourUnavailableWarning(
+          `${armourType} armour selected but no armour dataset is bundled; armour short-circuit verification was not evaluated`,
+        ),
+      ],
     };
   }
   if (selectedConductorCsaMm2 == null) {
     return {
       state: FieldStateBuilder.incomplete('missing_input'),
       armour: null,
-      warnings,
+      warnings: [
+        armourUnavailableWarning(
+          `${armourType} armour selected but conductor CSA is not available; armour short-circuit verification was not evaluated`,
+        ),
+      ],
     };
   }
   const cableConstruction = buildConstructionKey(input);
@@ -133,7 +161,11 @@ export function deriveArmour(
     return {
       state: FieldStateBuilder.unavailable('not_applicable'),
       armour: null,
-      warnings,
+      warnings: [
+        armourUnavailableWarning(
+          `${armourType} armour selected but cable construction could not be resolved; armour short-circuit verification was not evaluated`,
+        ),
+      ],
     };
   }
   const hit = lookupArmour(armourDataset, cableConstruction, selectedConductorCsaMm2);
@@ -141,7 +173,11 @@ export function deriveArmour(
     return {
       state: FieldStateBuilder.unavailable('no_dataset_match'),
       armour: null,
-      warnings,
+      warnings: [
+        armourUnavailableWarning(
+          `${armourType} armour selected but no armour CSA entry matches ${cableConstruction} at ${selectedConductorCsaMm2} mm²; armour short-circuit verification was not evaluated`,
+        ),
+      ],
     };
   }
   const bundle: ArmourBundle = {

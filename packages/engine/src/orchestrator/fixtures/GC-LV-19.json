@@ -1,0 +1,32 @@
+{
+  "id": "GC-LV-19-DESIGN-CURRENT-OVERRIDE-ZERO",
+  "description": "Explicit overrides.designCurrent=0 — invalid override fails closed without fallback derivation.",
+  "spec": "Golden Patch B / overrides.designCurrent zero invalid",
+  "input": {
+    "load": { "type": "general", "powerKW": 25, "powerFactor": 0.85, "efficiency": 0.9, "demandFactor": 1.0 },
+    "system": { "voltageV": 400, "phase": 3, "frequencyHz": 50, "topology": "3ph3w" },
+    "cable": { "conductorMaterial": "Cu", "insulationType": "PVC", "coreConfiguration": "3C", "cableType": "multicore" },
+    "installation": { "methodCode": "C", "ambientTempC": 30, "soilResistivityK_m_W": null, "groupCount": 1 },
+    "route": { "lengthM": 50 },
+    "protection": { "deviceType": "MCB", "ratedCurrentA": 50, "operatingCurrentI2A": 72.5, "tripTimeS": 0.1, "shortCircuitKA": 10 },
+    "projectPolicy": { "maxVoltageDropPercent": 5, "useReactance": false, "resistanceModel": "fixed_reference", "roundingPolicy": "next_standard_csa" },
+    "overrides": { "designCurrent": 0 }
+  },
+  "expected": {
+    "designCurrentApprox": 0,
+    "designCurrentTolerance": 0.001,
+    "overallStatus": "INCOMPLETE",
+    "recommendedCSAmm2": null,
+    "selectionDriver": "none",
+    "ampacityStatus": "FAIL",
+    "voltageDropStatus": "FAIL",
+    "shortCircuitStatus": "FAIL",
+    "protectionStatus": "INCOMPLETE",
+    "warningCodesExact": [],
+    "errorCodesExact": [],
+    "fieldStates": {
+      "designCurrent": { "source": "override", "status": "invalid", "formula": "IB_OVERRIDE", "reason": "out_of_range", "valueExact": null }
+    },
+    "loadedConductorsUsedExact": null
+  }
+}

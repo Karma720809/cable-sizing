@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<title>Cable Sizing Calculator — 사용 설명서</title>
+<style>
+@page { size: A4; margin: 18mm 16mm 20mm 16mm; }
+* { box-sizing: border-box; }
+html, body {
+  font-family: "Malgun Gothic", "맑은 고딕", "Noto Sans KR", "Apple SD Gothic Neo",
+               -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 10.5pt;
+  line-height: 1.55;
+  color: #1a1a1a;
+  margin: 0;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+h1, h2, h3, h4 { color: #0b3d91; line-height: 1.25; page-break-after: avoid; }
+h1 {
+  font-size: 22pt; margin: 0 0 6pt 0; padding-bottom: 6pt;
+  border-bottom: 2pt solid #0b3d91;
+}
+h2 {
+  font-size: 15pt; margin: 18pt 0 6pt 0; padding-bottom: 3pt;
+  border-bottom: 1pt solid #c8d4e8;
+}
+h3 { font-size: 12.5pt; margin: 14pt 0 4pt 0; }
+h4 { font-size: 11pt; margin: 10pt 0 4pt 0; color: #16518c; }
+p { margin: 4pt 0 6pt 0; }
+ul, ol { margin: 4pt 0 6pt 0; padding-left: 18pt; }
+li { margin: 1pt 0; }
+hr { border: none; border-top: 1pt solid #c8d4e8; margin: 12pt 0; }
+a { color: #0b66c3; text-decoration: none; }
+strong { color: #0b3d91; }
+blockquote {
+  border-left: 3pt solid #c8d4e8;
+  padding: 4pt 10pt;
+  margin: 6pt 0;
+  background: #f4f7fb;
+  color: #2c3e50;
+}
+code {
+  font-family: "Cascadia Mono", Consolas, "D2Coding", "Courier New", monospace;
+  font-size: 9.5pt;
+  background: #f1f3f5;
+  padding: 1pt 4pt;
+  border-radius: 2pt;
+}
+pre {
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 10pt 12pt;
+  border-radius: 4pt;
+  overflow-x: auto;
+  font-size: 9pt;
+  line-height: 1.45;
+  page-break-inside: avoid;
+}
+pre code { background: transparent; color: inherit; padding: 0; font-size: 9pt; }
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 6pt 0 10pt 0;
+  font-size: 9.8pt;
+  page-break-inside: auto;
+}
+thead { display: table-header-group; }
+tr { page-break-inside: avoid; }
+th, td {
+  border: 0.6pt solid #b8c4d6;
+  padding: 4pt 6pt;
+  text-align: left;
+  vertical-align: top;
+}
+th { background: #e8eff9; color: #0b3d91; font-weight: 600; }
+tbody tr:nth-child(even) { background: #f7f9fc; }
+
+/* Cover */
+.cover {
+  page-break-after: always;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  padding: 40pt;
+}
+.cover .title { font-size: 32pt; color: #0b3d91; font-weight: 700; margin-bottom: 8pt; }
+.cover .subtitle { font-size: 14pt; color: #16518c; margin-bottom: 24pt; }
+.cover .meta { font-size: 11pt; color: #4a5b73; line-height: 1.8; margin-top: 30pt; }
+.cover .badge {
+  display: inline-block;
+  background: #e8eff9;
+  color: #0b3d91;
+  border: 1pt solid #b8c4d6;
+  padding: 4pt 10pt;
+  border-radius: 4pt;
+  margin: 4pt;
+  font-size: 10pt;
+}
+</style>
+</head>
+<body>
+
+<section class="cover">
+  <div class="title">Cable Sizing Calculator</div>
+  <div class="subtitle">사용 설명서 (User Guide)</div>
+  <div>
+    <span class="badge">LV · IEC 60364-5-52</span>
+    <span class="badge">MV · KEPCO ES 6145 (22.9 kV CNCV-W)</span>
+  </div>
+  <div class="meta">
+    엔진 버전 · @cable-sizing/engine v0.11.0<br/>
+    작성예제 10건 (LV 3 / MV TC-01 ~ TC-10) 포함<br/>
+    발행일 · 2026-04-28
+  </div>
+</section>
+<main>
+<h1>Cable Sizing Calculator — 사용 설명서</h1>
+<p>저압(IEC 60364-5-52, ≤ 1 kV)과 한국 22.9 kV 배전(KEPCO ES 6145, CNCV-W 단심) 전원케이블의 단일회로 사이징을 자동화하는 웹 애플리케이션입니다. 본 설명서는 <strong>실행 → 입력 → 결과 해석 → 검증 케이스</strong> 순으로 구성되어 있습니다. 모든 검증 예제의 수치는 엔진(<code>@cable-sizing/engine</code> v0.11.0)을 실제로 실행해 채웠으므로, 동일 입력을 그대로 입력하시면 동일한 결과가 나와야 합니다.</p>
+<hr>
+<h2>1. 개요</h2>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>적용 표준</td>
+<td>LV: IEC 60364-5-52 / IEC 60364-5-54 / IEC 60287-1-1 / IEC 60228 · MV: KEPCO ES 6145, KS C IEC 60502, IEC 60949</td>
+</tr>
+<tr>
+<td>도체/절연</td>
+<td>LV: Cu·Al × PVC·XLPE · MV: Cu / XLPE 단심 (CNCV-W, TR-CNCV-W, FR-CNCO-W)</td>
+</tr>
+<tr>
+<td>사이즈 범위</td>
+<td>LV: 1.5–300 mm² (Cu), 16–300 mm² (Al) · MV: 60–600 mm²</td>
+</tr>
+<tr>
+<td>검증 항목</td>
+<td>허용전류(IZ ≥ IB), 전압강하 ΔU%, 단락내량(도체 + 차폐), 보호장치 협조</td>
+</tr>
+<tr>
+<td>결과 형식</td>
+<td>권장 단면적 + 결정 요인(driver) + 통과/실패 + 경고/오류 + 감사로그(auditTrail)</td>
+</tr>
+</tbody></table>
+<p>비목표(MVP에서 다루지 않음): 154 kV 이상, 병렬 케이블, 릴레이 협조 시간계산, 교차본딩, 다회로 동시 사이징.</p>
+<hr>
+<h2>2. 실행 방법</h2>
+<h3>운영 환경(Vercel)</h3>
+<p><code>main</code> 브랜치는 자동 배포됩니다. 운영 URL을 브라우저에서 열어 곧바로 사용하시면 됩니다.</p>
+<h3>개발 환경(로컬)</h3>
+<pre><code class="language-bash">cd cable-sizing
+npm install
+npm --workspace packages/engine run build      # 호스트가 dist/를 읽으므로 최초 1회 필요
+npm --workspace packages/host-web run dev      # http://localhost:5173/
+</code></pre>
+<p>브라우저에서 <code>http://localhost:5173/</code>로 접속하면 3단 레이아웃(입력 폼 / 결과 / 진단 정보)이 표시됩니다.</p>
+<h3>빌드 / 검증</h3>
+<pre><code class="language-bash">npm run build       # 모노레포 전체 (engine → host-web)
+npm run typecheck   # 타입 검사
+npm run test        # 332(엔진) + 12(호스트) 테스트 모두 통과
+</code></pre>
+<hr>
+<h2>3. 화면 구성</h2>
+<pre><code>┌────────── header ──────────────────────────────────────┐
+│ Cable Sizing Calculator                                 │
+├──────── form ──────┬────── result ──────┬─── diag ─────┤
+│ Voltage class      │ Recommended CSA    │ engine ver.  │
+│ ┌ LV / MV ─────┐   │ ┌─────────────────┐│ datasetId    │
+│ │ (셀렉터)      │   │ │   N mm² (PASS)  ││ apiVersion   │
+│ └──────────────┘   │ └─────────────────┘│              │
+│                    │  Criteria 표        │              │
+│ (LV 또는 MV 폼)    │  Warnings / Errors  │              │
+│ ...                │  Audit trail        │              │
+│ [Size cable] 버튼  │                     │              │
+└────────────────────┴─────────────────────┴──────────────┘
+</code></pre>
+<p>가장 위 <strong>Voltage class</strong> 셀렉터에서 LV / MV를 선택하면 그 아래 폼이 통째로 교체됩니다. 입력은 두 모드가 별도로 보존되므로 토글해도 값을 잃지 않습니다.</p>
+<hr>
+<h2>4. 공통 워크플로우</h2>
+<ol>
+<li><strong>Voltage class</strong> 선택 (LV / MV)</li>
+<li>부하 → 케이블 → 포설 → 보호 → 정책 순으로 입력</li>
+<li>우측 하단 <strong>Size cable</strong> 클릭</li>
+<li>결과 패널의 <strong>Recommended CSA</strong> + <strong>Driver</strong> 확인</li>
+<li><strong>Criteria</strong> 표에서 4–6개 항목별 PASS/FAIL 검토</li>
+<li><strong>Warnings / Audit trail</strong>로 보정계수·중간계산값 검증</li>
+</ol>
+<p>결과 상태는 <code>PASS / WARNING / FAIL / INCOMPLETE</code> 4종입니다.</p>
+<ul>
+<li><strong>INCOMPLETE</strong>는 &quot;선택적 입력이 빠져 검증 일부를 건너뛰었음&quot;을 뜻하며 실패가 아닙니다(예: MV에서 지락전류를 입력하지 않으면 차폐 검증이 건너뛰어져 INCOMPLETE).</li>
+</ul>
+<hr>
+<h2>5. LV (저압, ≤ 1 kV) 사용법</h2>
+<h3>5.1 입력 필드</h3>
+<table>
+<thead>
+<tr>
+<th>섹션</th>
+<th>필드</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Load</td>
+<td>Load type</td>
+<td>general / motor / heater / lighting</td>
+</tr>
+<tr>
+<td></td>
+<td>Power (kW)</td>
+<td>정격전력</td>
+</tr>
+<tr>
+<td></td>
+<td>Power factor</td>
+<td>0–1</td>
+</tr>
+<tr>
+<td></td>
+<td>Efficiency, Demand factor</td>
+<td>고급 (기본 0.9 / 1.0)</td>
+</tr>
+<tr>
+<td></td>
+<td>IB override</td>
+<td>설계전류를 직접 입력할 때 (W-IB-OVERRIDE)</td>
+</tr>
+<tr>
+<td>System</td>
+<td>Voltage (V), Phase, Frequency</td>
+<td>1ϕ 230 / 3ϕ 400 / 50 또는 60 Hz</td>
+</tr>
+<tr>
+<td>Cable</td>
+<td>Conductor / Insulation / Cable type / Core config</td>
+<td>Cu·Al × PVC·XLPE × multicore·single-core × 2C/3C/4C/3C+N</td>
+</tr>
+<tr>
+<td>Installation</td>
+<td>Reference method</td>
+<td>A1·A2·B1·B2·C·D1·D2·E·F·G (IEC 60364-5-52 Annex B)</td>
+</tr>
+<tr>
+<td></td>
+<td>Ambient (°C)</td>
+<td>공기 또는 지중 환경</td>
+</tr>
+<tr>
+<td></td>
+<td>Group count</td>
+<td>동일 트레이/덕트 회로 수</td>
+</tr>
+<tr>
+<td></td>
+<td>Soil ρ (K·m/W)</td>
+<td>D1/D2일 때만 입력</td>
+</tr>
+<tr>
+<td>Route</td>
+<td>Length, one-way (m)</td>
+<td>단방향 거리</td>
+</tr>
+<tr>
+<td>Protection</td>
+<td>Device, In, Isc (kA), Trip time (s)</td>
+<td>단락내량 검증 + 협조</td>
+</tr>
+<tr>
+<td>Project policy</td>
+<td>Max ΔU (%), Reactance, Resistance model</td>
+<td>XLPE/PVC, fixed_reference vs temperature_corrected</td>
+</tr>
+</tbody></table>
+<h3>5.2 결과 해석</h3>
+<ul>
+<li><code>IZ = ampacityRow × k1·k2·k3</code> — k_total은 Criteria 표 1행에 표시됩니다.</li>
+<li>ΔU = √3·IB·(R cosφ + X sinφ)·L (3상) — 한계 초과 시 더 큰 단면적으로 자동 상향됩니다.</li>
+<li><code>S_min = Isc·√t / k</code> — 도체 단락내량 (k=115/143/76/94 in IEC 60364-5-54).</li>
+<li><code>Driver</code>: 어느 기준이 권장 단면적을 결정했는지 (<code>ampacity</code> / <code>voltage_drop</code> / <code>short_circuit</code> / <code>protection_recheck</code> / <code>mixed</code>).</li>
+</ul>
+<h3>5.3 검증 케이스 — LV</h3>
+<h4>LV-Case A: 기본 회로 (단락내량이 결정)</h4>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>값</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>부하</td>
+<td>general, 25 kW, pf=0.85, η=0.9, df=1.0</td>
+</tr>
+<tr>
+<td>시스템</td>
+<td>400 V / 3ϕ / 50 Hz</td>
+</tr>
+<tr>
+<td>케이블</td>
+<td>Cu / PVC / 3C+N / multicore</td>
+</tr>
+<tr>
+<td>포설</td>
+<td>Method C, 30 °C, 그룹 1</td>
+</tr>
+<tr>
+<td>거리</td>
+<td>50 m</td>
+</tr>
+<tr>
+<td>보호</td>
+<td>MCB 50 A, Isc 10 kA, t = 0.1 s</td>
+</tr>
+<tr>
+<td>정책</td>
+<td>Max ΔU = 5 %, useReactance = false</td>
+</tr>
+</tbody></table>
+<p><strong>기대 결과</strong></p>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>값</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>IB</td>
+<td><strong>47.17 A</strong></td>
+</tr>
+<tr>
+<td>권장 단면적</td>
+<td><strong>35 mm²</strong></td>
+</tr>
+<tr>
+<td>Driver</td>
+<td><code>short_circuit</code></td>
+</tr>
+<tr>
+<td>Overall status</td>
+<td><code>PASS</code></td>
+</tr>
+<tr>
+<td>전압강하 ΔU</td>
+<td>1.840 % (한계 5 %)</td>
+</tr>
+<tr>
+<td>Iz</td>
+<td>57.0 A</td>
+</tr>
+</tbody></table>
+<p>해설: 25 mm²의 cable rating(54 A)이 <code>IB=47.17A</code> 만족하지만 단락내량 <code>S_min = 10000·√0.1/115 ≈ 27.5 mm²</code>가 다음 표준 단면적인 35 mm²로 올라가면서 단락내량이 사이징을 결정합니다.</p>
+<h4>LV-Case B: 장거리에서 전압강하가 결정</h4>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>값</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>부하</td>
+<td>general, 50 kW, pf=0.85, η=0.9, df=1.0</td>
+</tr>
+<tr>
+<td>시스템</td>
+<td>400 V / 3ϕ / 50 Hz</td>
+</tr>
+<tr>
+<td>케이블</td>
+<td>Cu / <strong>XLPE</strong> / 3C+N / multicore</td>
+</tr>
+<tr>
+<td>포설</td>
+<td>Method C, 30 °C, 그룹 1</td>
+</tr>
+<tr>
+<td>거리</td>
+<td><strong>200 m</strong></td>
+</tr>
+<tr>
+<td>보호</td>
+<td>MCB 100 A, Isc 10 kA, t = 0.1 s</td>
+</tr>
+<tr>
+<td>정책</td>
+<td>Max ΔU = <strong>3 %</strong></td>
+</tr>
+</tbody></table>
+<p><strong>기대 결과</strong></p>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>값</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>IB</td>
+<td><strong>94.34 A</strong></td>
+</tr>
+<tr>
+<td>권장 단면적</td>
+<td><strong>70 mm²</strong></td>
+</tr>
+<tr>
+<td>Driver</td>
+<td><code>voltage_drop</code></td>
+</tr>
+<tr>
+<td>Overall status</td>
+<td><code>PASS</code></td>
+</tr>
+<tr>
+<td>csa(허용전류 기준)</td>
+<td>25 mm²</td>
+</tr>
+<tr>
+<td>csa(전압강하 기준)</td>
+<td>70 mm²</td>
+</tr>
+<tr>
+<td>최종 ΔU</td>
+<td>2.382 %</td>
+</tr>
+</tbody></table>
+<p>해설: 허용전류만으로는 25 mm²면 충분(rating 116 A &gt; 94 A)이지만 200 m 라인에서 ΔU 3 % 한계 때문에 70 mm²까지 단면적이 상향됩니다. <code>selectionDriver = voltage_drop</code>이 이를 명시합니다.</p>
+<h4>LV-Case C: 보정계수 안전측 lookup 경고</h4>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>값</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Case A 기본값 + Ambient = <strong>35 °C</strong></td>
+<td></td>
+</tr>
+</tbody></table>
+<p><strong>기대 결과</strong>: <code>W-LOOKUP-SAFE-SIDE</code> 경고가 출력됩니다. IEC 60364-5-52 Table B.52.14는 30/35/40 °C 행만 가지고 있어 35 °C는 정확히 일치하지만, 33 °C 같은 중간값을 입력하면 보수적 이웃(작은 factor)을 선택해 더 큰 단면적이 권장됩니다.</p>
+<hr>
+<h2>6. MV (22.9 kV, 한국 배전) 사용법</h2>
+<h3>6.1 입력 필드</h3>
+<p>시스템 전압 22.9 kV-Y / U₀ 13.2 kV / 60 Hz / Cu / XLPE는 <strong>고정</strong>되어 입력란에 노출되지 않습니다.</p>
+<table>
+<thead>
+<tr>
+<th>섹션</th>
+<th>필드</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Load</td>
+<td>Load type</td>
+<td>transformer / general / motor (변압기는 MVA, 그 외는 kW + pf + η + df)</td>
+</tr>
+<tr>
+<td></td>
+<td>Apparent power (MVA) / Power (kW)</td>
+<td>부하 종류에 따라 활성화</td>
+</tr>
+<tr>
+<td></td>
+<td>IB override</td>
+<td>직접 IB 입력 시 활성화</td>
+</tr>
+<tr>
+<td>Cable</td>
+<td>Cable type</td>
+<td>CNCV-W / TR-CNCV-W / FR-CNCO-W</td>
+</tr>
+<tr>
+<td></td>
+<td>Override screen CSA / capacitance</td>
+<td>미입력 시 dataset 자동 조회</td>
+</tr>
+<tr>
+<td>Installation</td>
+<td>Method</td>
+<td>direct_buried / duct_bank / trough / tunnel</td>
+</tr>
+<tr>
+<td></td>
+<td>Formation</td>
+<td>trefoil / flat_touching / flat_spaced (flat_spaced는 spacing(mm) 필수)</td>
+</tr>
+<tr>
+<td></td>
+<td>Ground temp (°C)</td>
+<td>KEPCO 보정표 범위 15–40 °C</td>
+</tr>
+<tr>
+<td></td>
+<td>Soil ρ (K·m/W)</td>
+<td>0.5–3.0 K·m/W (필수, 기본값 미적용)</td>
+</tr>
+<tr>
+<td></td>
+<td>Burial depth (m)</td>
+<td>직매설 시만 활성, 0.6–1.5 m</td>
+</tr>
+<tr>
+<td></td>
+<td>Group count</td>
+<td>1–6</td>
+</tr>
+<tr>
+<td>Protection</td>
+<td>Device</td>
+<td>VCB / Fuse / Recloser</td>
+</tr>
+<tr>
+<td></td>
+<td>Rated In (A), Breaking (kA), Isc (kA), Trip time (s)</td>
+<td>보호 협조 입력</td>
+</tr>
+<tr>
+<td></td>
+<td>Earth fault Ie (kA), Earth fault t (s)</td>
+<td>차폐 검증 (둘 다 입력하거나 둘 다 비우기)</td>
+</tr>
+<tr>
+<td>Route</td>
+<td>Length (m)</td>
+<td>단방향 거리</td>
+</tr>
+<tr>
+<td>Project policy</td>
+<td>Max ΔU (%), Verify screen, Charging current threshold</td>
+<td>충전전류 임계값(기본 0.01 = 1 %)</td>
+</tr>
+</tbody></table>
+<h3>6.2 결과 해석 (MV 추가 항목)</h3>
+<ul>
+<li><code>k1·k2·k3·k4</code> 네 보정계수가 분리 표시됩니다(LV는 k1·k2·k3 셋만).</li>
+<li><code>Charging current Ic</code> 행: <code>Ic ≥ threshold·IB</code>이면 <code>I_eff = √(IB² + Ic²)</code>로 합산되고 <code>W-MV-CHARGING-APPLIED</code> 경고가 동반됩니다(보수적 절대치 합산 — 위상상쇄 미반영, Amendment 1).</li>
+<li><code>Screen short-circuit</code> 행: 사용자가 차폐 CSA를 비워두면 dataset에서 conductor CSA에 대응하는 차폐 단면적을 자동 조회 (<code>W-MV-SCREEN-AUTO-FILLED</code>). Ie + t 둘 중 하나만 입력하면 <code>E-MV-VAL-006</code> 오류, 둘 다 비우면 <code>INCOMPLETE</code>.</li>
+<li>보호 협조는 두 조건만 검증합니다: <code>In ≥ IB</code>, <code>breakingKA ≥ shortCircuitKA</code>. 릴레이 협조는 비포함 — <code>W-MV-PROTECTION-DISCLAIMER</code>로 항상 명시됩니다.</li>
+</ul>
+<h3>6.3 검증 케이스 — MV (Calc Spec v0.2 §13 Golden Cases)</h3>
+<blockquote>
+<p>표준 baseline (TC-01과 동일):
+변압기 1 MVA / 22.9 kV / CNCV-W / 직매설 / trefoil / 토양 ρ=1.2 K·m/W / 매설깊이 0.8 m / 그룹 1 / 지중온도 25 °C / 길이 500 m / VCB In=200 A · breaking=25 kA · Isc=12 kA · t=0.5 s / Max ΔU=3 % / verifyScreen=true.
+각 케이스는 baseline에서 <strong>변경하는 항목만</strong> 적습니다.</p>
+</blockquote>
+<h4>TC-01 — 허용전류가 결정</h4>
+<table>
+<thead>
+<tr>
+<th>변경</th>
+<th>(없음)</th>
+</tr>
+</thead>
+</table>
+<p><strong>기대 결과</strong></p>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>값</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>IB</td>
+<td><strong>25.21 A</strong> (= 1 MVA / √3 / 22 900)</td>
+</tr>
+<tr>
+<td>k1·k2·k3·k4</td>
+<td>1.0 / 1.0 / 1.0 / 1.0 (= 1.0)</td>
+</tr>
+<tr>
+<td>Iz (cable rating)</td>
+<td>265 A</td>
+</tr>
+<tr>
+<td>권장 단면적</td>
+<td><strong>60 mm²</strong></td>
+</tr>
+<tr>
+<td>Driver</td>
+<td><code>mixed</code> (ampacity, voltage_drop, short_circuit 모두 60 mm²로 일치)</td>
+</tr>
+<tr>
+<td>ΔU</td>
+<td>0.039 %</td>
+</tr>
+<tr>
+<td>Ic</td>
+<td>0.70 A (1 % 미만 → 무시)</td>
+</tr>
+<tr>
+<td>Screen</td>
+<td><code>INCOMPLETE</code> (지락전류 미입력)</td>
+</tr>
+<tr>
+<td>Overall</td>
+<td><code>INCOMPLETE</code></td>
+</tr>
+</tbody></table>
+<p>해설: 모든 검증이 60 mm²를 만족하므로 권장 단면적은 60 mm²입니다. 차폐 검증을 건너뛰어 overall=INCOMPLETE — 정상 시나리오입니다. 지락전류를 입력하면 PASS 또는 FAIL로 확정됩니다.</p>
+<h4>TC-02 — 전압강하가 결정</h4>
+<table>
+<thead>
+<tr>
+<th>변경</th>
+<th>apparentPowerMVA = <strong>5.0</strong>, lengthM = <strong>3000</strong>, maxVoltageDropPercent = <strong>1.5</strong></th>
+</tr>
+</thead>
+</table>
+<p><strong>기대 결과</strong>: 권장 단면적이 허용전류로 정해질 60 mm²보다 커집니다. 후보 단면적 스캔 결과가 audit trail에 모두 기록되며, 처음으로 ΔU ≤ 1.5 %를 만족하는 단면적이 선정됩니다.</p>
+<h4>TC-03 — 단락내량이 결정</h4>
+<table>
+<thead>
+<tr>
+<th>변경</th>
+<th>shortCircuitKA = <strong>25</strong>, tripTimeS = <strong>1</strong>, breakingKA = <strong>31.5</strong></th>
+</tr>
+</thead>
+</table>
+<p><strong>기대 결과</strong></p>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>값</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>S_raw</code> (도체)</td>
+<td><strong>174.83 mm²</strong> (= 25 000·√1 / 143)</td>
+</tr>
+<tr>
+<td>권장 단면적</td>
+<td><strong>200 mm²</strong> (다음 표준 단면적)</td>
+</tr>
+<tr>
+<td>Driver</td>
+<td><code>short_circuit</code></td>
+</tr>
+</tbody></table>
+<h4>TC-04 — 차폐 단락내량 FAIL</h4>
+<table>
+<thead>
+<tr>
+<th>변경</th>
+<th>screenCsaMm2 = <strong>22</strong>, earthFaultKA = <strong>10</strong>, earthFaultTimeS = <strong>0.5</strong></th>
+</tr>
+</thead>
+</table>
+<p><strong>기대 결과</strong></p>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>값</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>권장 도체 단면적</td>
+<td>60 mm²</td>
+</tr>
+<tr>
+<td>차폐 필요 단면적</td>
+<td><strong>49.45 mm²</strong> (= 10 000·√0.5 / 143)</td>
+</tr>
+<tr>
+<td>사용자 차폐</td>
+<td>22 mm²</td>
+</tr>
+<tr>
+<td>Screen status</td>
+<td><code>FAIL</code></td>
+</tr>
+<tr>
+<td>Overall</td>
+<td><code>FAIL</code></td>
+</tr>
+</tbody></table>
+<p>해설: 도체는 통과해도 차폐가 지락전류 적분치를 견디지 못하면 전체가 FAIL입니다. 차폐 CSA를 비워두면 dataset이 자동으로 60 mm² 케이블의 표준 차폐(22 mm²)를 가져오므로 동일하게 FAIL. 더 큰 도체 CSA를 사용하면 표준 차폐가 35/45/83 mm²로 증가해 통과 가능.</p>
+<h4>TC-05 — 충전전류 합산</h4>
+<table>
+<thead>
+<tr>
+<th>변경</th>
+<th>apparentPowerMVA = <strong>0.5</strong>, lengthM = <strong>5000</strong></th>
+</tr>
+</thead>
+</table>
+<p><strong>기대 결과</strong></p>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>값</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>IB</td>
+<td>12.61 A</td>
+</tr>
+<tr>
+<td>Ic</td>
+<td><strong>6.97 A</strong> (CNCV-W 60 mm²의 0.28 μF/km × 5 km)</td>
+</tr>
+<tr>
+<td>Ic / IB</td>
+<td>55 % (≫ 1 % 임계값)</td>
+</tr>
+<tr>
+<td>I_eff</td>
+<td><strong>14.40 A</strong> = √(12.61² + 6.97²)</td>
+</tr>
+<tr>
+<td>권장 단면적</td>
+<td>60 mm²</td>
+</tr>
+<tr>
+<td>경고</td>
+<td><code>W-MV-CHARGING-APPLIED</code> + <code>W-MV-CHARGING-CONSERVATIVE</code></td>
+</tr>
+</tbody></table>
+<p>해설: 장거리 + 저부하에서는 충전전류가 무시할 수 없는 비율을 차지합니다. 엔진이 자동으로 I_eff 모드로 전환하고 보수적 합산임을 경고합니다.</p>
+<h4>TC-06 — 보정계수 종합</h4>
+<table>
+<thead>
+<tr>
+<th>변경</th>
+<th>ambientTempC = <strong>35</strong>, soilResistivityK_m_W = <strong>3.0</strong>, groupCount = <strong>4</strong>, burialDepthM = <strong>1.2</strong></th>
+</tr>
+</thead>
+</table>
+<p><strong>기대 결과</strong></p>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>값</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>k1 (지중온도 35 °C)</td>
+<td><strong>0.91</strong></td>
+</tr>
+<tr>
+<td>k2 (ρ = 3.0)</td>
+<td><strong>0.75</strong></td>
+</tr>
+<tr>
+<td>k3 (n=4 직매설)</td>
+<td><strong>0.67</strong></td>
+</tr>
+<tr>
+<td>k4 (1.2 m)</td>
+<td><strong>0.96</strong></td>
+</tr>
+<tr>
+<td>k_total</td>
+<td><strong>0.439</strong></td>
+</tr>
+<tr>
+<td>Iz (60 mm² × 0.439)</td>
+<td>116.3 A</td>
+</tr>
+<tr>
+<td>권장 단면적</td>
+<td>60 mm² (IB가 작아 여전히 통과)</td>
+</tr>
+</tbody></table>
+<p>해설: 가혹 조건에서 보정계수가 어떻게 합쳐지는지 확인하는 케이스. IB가 더 컸다면 단면적이 상향됐을 것입니다.</p>
+<h4>TC-07 — 관로(duct_bank) 그룹 4</h4>
+<table>
+<thead>
+<tr>
+<th>변경</th>
+<th>installationMethod = <strong>duct_bank</strong>, groupCount = <strong>4</strong></th>
+</tr>
+</thead>
+</table>
+<p><strong>기대 결과</strong>: k3가 직매설 column이 아닌 duct_bank column(0.73)에서 선택되어야 합니다. 결과 패널 Criteria 행에서 <code>k₃=0.73</code> 명시.</p>
+<h4>TC-08 — 정전용량 사용자 입력</h4>
+<table>
+<thead>
+<tr>
+<th>변경</th>
+<th>Override capacitance = <strong>0.5 μF/km</strong>, lengthM = <strong>5000</strong></th>
+</tr>
+</thead>
+</table>
+<p><strong>기대 결과</strong>: <code>W-MV-CAPACITANCE-OVERRIDE</code> 경고가 출력되고, dataset 값(0.28) 대신 사용자 입력값으로 Ic가 계산됩니다(약 1.25 A/km × 5 km ≈ 6.2 A).</p>
+<h4>TC-09 — 보호장치 차단용량 부족</h4>
+<table>
+<thead>
+<tr>
+<th>변경</th>
+<th>breakingKA = <strong>15</strong>, shortCircuitKA = <strong>25</strong>, tripTimeS = <strong>1</strong></th>
+</tr>
+</thead>
+</table>
+<p><strong>기대 결과</strong></p>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>값</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>권장 단면적</td>
+<td><strong>200 mm²</strong> (도체 단락내량 ≥ 174.83 mm²)</td>
+</tr>
+<tr>
+<td>Protection condition 1 (In ≥ IB)</td>
+<td>PASS</td>
+</tr>
+<tr>
+<td>Protection condition 2 (breaking ≥ Isc)</td>
+<td><strong>FAIL</strong> (15 &lt; 25)</td>
+</tr>
+<tr>
+<td>Overall</td>
+<td><code>FAIL</code></td>
+</tr>
+</tbody></table>
+<p>해설: 도체는 견디지만 차단기 자체가 단락전류를 끊지 못하므로 전체 FAIL. 차단기를 31.5 kA 이상으로 변경해야 합니다.</p>
+<h4>TC-10 — 차폐 검증 INCOMPLETE</h4>
+<table>
+<thead>
+<tr>
+<th>변경</th>
+<th>(지락전류 입력 모두 비움 — TC-01과 동일)</th>
+</tr>
+</thead>
+</table>
+<p><strong>기대 결과</strong>: <code>W-MV-SCREEN-INCOMPLETE</code> 경고와 함께 차폐 항목이 INCOMPLETE 처리. 권장 단면적은 정상적으로 산정됩니다.</p>
+<hr>
+<h2>7. 경고·오류 코드 레퍼런스</h2>
+<h3>LV 경고</h3>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>의미</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>W-DEFAULT-APPLIED</td>
+<td>누락된 선택 입력에 기본값 적용</td>
+</tr>
+<tr>
+<td>W-IB-OVERRIDE</td>
+<td>사용자가 IB를 직접 입력</td>
+</tr>
+<tr>
+<td>W-LOOKUP-SAFE-SIDE</td>
+<td>보정계수 lookup이 정확 일치가 아니라 보수적 이웃을 선택</td>
+</tr>
+<tr>
+<td>W-PROTECTION-RECHECK</td>
+<td>단면적이 단락보호 재확인 단계에서 상향</td>
+</tr>
+<tr>
+<td>W-I2-MISSING</td>
+<td>I₂ 입력 누락 → 협조 INCOMPLETE</td>
+</tr>
+<tr>
+<td>W-REACTANCE-IGNORED</td>
+<td>작은 csa에서 X = 0 처리</td>
+</tr>
+<tr>
+<td>W-TEMP-CORRECTION-APPLIED / -CAPPED</td>
+<td>temperature_corrected 모드 적용 / θ_op 한계 도달</td>
+</tr>
+</tbody></table>
+<h3>LV 오류</h3>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>의미</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>E-VAL-001~010</td>
+<td>입력 검증 실패</td>
+</tr>
+<tr>
+<td>E-LOOKUP-001</td>
+<td>허용전류 조합 없음(예: F/G + multicore)</td>
+</tr>
+<tr>
+<td>E-LOOKUP-002</td>
+<td>보정계수 입력값 범위 밖</td>
+</tr>
+<tr>
+<td>E-LOOKUP-003</td>
+<td>임피던스 csa 없음</td>
+</tr>
+<tr>
+<td>E-LOOKUP-004</td>
+<td>k 값 조합 없음</td>
+</tr>
+<tr>
+<td>E-CSA-001</td>
+<td>필요 csa가 표준 ladder 최대 초과</td>
+</tr>
+<tr>
+<td>E-TEMP-AMBIENT-OVER-MAX</td>
+<td>temperature_corrected 모드에서 ambient ≥ 도체 한계</td>
+</tr>
+</tbody></table>
+<h3>MV 경고</h3>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>의미</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>W-MV-DEFAULT-APPLIED</td>
+<td>누락 입력에 기본값 적용</td>
+</tr>
+<tr>
+<td>W-MV-IB-OVERRIDE</td>
+<td>사용자가 IB 직접 입력</td>
+</tr>
+<tr>
+<td>W-MV-LOOKUP-SAFE-SIDE</td>
+<td>k1~k4 lookup이 보수적 이웃 사용</td>
+</tr>
+<tr>
+<td>W-MV-CHARGING-IGNORED / -APPLIED</td>
+<td>Ic가 임계값 미만 → 무시 / 임계값 이상 → I_eff 적용</td>
+</tr>
+<tr>
+<td>W-MV-CHARGING-CONSERVATIVE</td>
+<td>I_eff 합산이 위상상쇄 미반영 (Amendment 1)</td>
+</tr>
+<tr>
+<td>W-MV-CAPACITANCE-OVERRIDE</td>
+<td>사용자가 정전용량 직접 입력</td>
+</tr>
+<tr>
+<td>W-MV-AMBIENT-DEFAULT</td>
+<td>지중온도 미입력 → 25 °C 기본 적용</td>
+</tr>
+<tr>
+<td>W-MV-SCREEN-AUTO-FILLED / -OVERRIDE / -INCOMPLETE</td>
+<td>차폐 자동조회 / 사용자 override / 지락전류 누락</td>
+</tr>
+<tr>
+<td>W-MV-PROTECTION-DISCLAIMER</td>
+<td>릴레이 협조는 검증 범위 밖 (항상 출력)</td>
+</tr>
+</tbody></table>
+<h3>MV 오류</h3>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>의미</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>E-MV-VAL-001</td>
+<td>시스템 고정값(22 900 V / 13 200 V / 3ϕ / 60 Hz) 위반</td>
+</tr>
+<tr>
+<td>E-MV-VAL-002</td>
+<td>부하 입력 누락 또는 범위 밖</td>
+</tr>
+<tr>
+<td>E-MV-VAL-003</td>
+<td>거리 ≤ 0</td>
+</tr>
+<tr>
+<td>E-MV-VAL-004</td>
+<td>토양 열저항 미입력 (기본값 미적용)</td>
+</tr>
+<tr>
+<td>E-MV-VAL-005</td>
+<td>flat_spaced 배열인데 spacing 누락</td>
+</tr>
+<tr>
+<td>E-MV-VAL-006</td>
+<td>지락전류 / 동작시간 중 한쪽만 입력</td>
+</tr>
+<tr>
+<td>E-MV-LOOKUP-001</td>
+<td>허용전류 표 없음 (예: FR-CNCO-W + direct_buried)</td>
+</tr>
+<tr>
+<td>E-MV-LOOKUP-002~004</td>
+<td>임피던스 / 정전용량 / 차폐 row 없음</td>
+</tr>
+<tr>
+<td>E-MV-LOOKUP-005~008</td>
+<td>그룹 / 온도 / 토양 / 깊이 입력값이 표 범위 초과</td>
+</tr>
+<tr>
+<td>E-MV-CSA-001</td>
+<td>필요 단면적이 600 mm² 초과</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>8. FAQ / 자주 발생하는 상황</h2>
+<p><strong>Q. MV에서 늘 INCOMPLETE가 나옵니다.</strong>
+지락전류(Earth fault Ie + t)를 입력하지 않으면 차폐 검증이 INCOMPLETE 처리됩니다(정상). 만약 차폐 검증을 굳이 안 하려면 정책 섹션의 <code>Verify screen</code>을 끄세요.</p>
+<p><strong>Q. LV <code>Method F/G</code> 단심 케이블인데 <code>E-LOOKUP-001</code>이 납니다.</strong>
+F/G는 단심 전용(Annex B.52.10–13)입니다. Cable type을 <code>single-core</code>로 바꾸세요. 동일하게 multicore에서 F/G를 고르면 dataset 조회가 실패합니다.</p>
+<p><strong>Q. <code>W-LOOKUP-SAFE-SIDE</code>가 떴는데 결과를 신뢰해도 되나요?</strong>
+정확 일치 키가 없을 때 엔진이 보수적 이웃(더 큰 derating, 더 큰 단면적)을 자동 선택했다는 뜻입니다. 결과는 안전측이며, 더 정밀한 값을 원하면 입력값을 표의 키 중 하나(예: 30/35/40 °C, 1.0/1.5/2.0/2.5/3.0 K·m/W)에 맞추면 됩니다.</p>
+<p><strong>Q. 결과의 audit trail은 어디에 쓰나요?</strong>
+설계 검토·보고서 첨부용 입니다. 각 단계의 <code>formula</code>, <code>intermediateValues</code>, <code>decision</code>, <code>reason</code>이 그대로 노출되므로 외부 검수자가 사이징 근거를 그대로 추적할 수 있습니다.</p>
+<p><strong>Q. 데이터셋의 출처는 어디인가요?</strong></p>
+<ul>
+<li>LV: IEC 60364-5-52 Annex B(Schneider Electric Electrical Installation Guide 기반) — <code>meta.json</code> 참조.</li>
+<li>MV: KEPCO ES 6145-0027 + LS전선 / 대한전선 / 강원전선 카탈로그 — <code>mv_22kv_kr_v1/meta.json</code> 참조 (<code>status: &quot;approved&quot;</code>).</li>
+</ul>
+<hr>
+<h2>9. 사양 문서 / 기술 자료</h2>
+<table>
+<thead>
+<tr>
+<th>자료</th>
+<th>위치</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>MV PRD (요구사항)</td>
+<td><code>고압/PRD_22.9kV_MV_Cable_Sizing_v1.2_FINAL (1).md</code></td>
+</tr>
+<tr>
+<td>MV 계산 사양</td>
+<td><code>고압/MV_Calculation_Specification_v0.2.md</code></td>
+</tr>
+<tr>
+<td>MV 수정사항 (보수적 합산, 차폐 auto-fill)</td>
+<td><code>고압/MV_Amendment_1_Expert_Feedback.md</code></td>
+</tr>
+<tr>
+<td>MV 데이터 거버넌스 (Source Blocking Rule)</td>
+<td><code>고압/MV_Amendment_2_Source_Block_Policy.md</code></td>
+</tr>
+<tr>
+<td>엔진 변경이력 / 버전 정책</td>
+<td><code>cable-sizing/packages/engine/CHANGELOG.md</code>, <code>docs/versioning-policy.md</code></td>
+</tr>
+<tr>
+<td>데이터셋 매트릭스</td>
+<td><code>cable-sizing/packages/engine/docs/dataset-matrix.md</code></td>
+</tr>
+<tr>
+<td>Worker 프로토콜 v1</td>
+<td><code>cable-sizing/packages/engine/docs/worker-protocol.md</code></td>
+</tr>
+</tbody></table>
+<p>엔진 출력의 모든 수치는 위 문서의 공식과 일대일 대응되며, 본 설명서의 검증 케이스는 <code>packages/engine/src/mv/golden-cases.test.ts</code> (MV Golden Cases) 및 <code>packages/engine/src/orchestrator/golden-cases.test.ts</code> (LV) 의 자동 테스트와 동일한 입력·기대값을 사용합니다. 즉 <strong>본 설명서에 적힌 결과는 CI에서 매번 검증</strong>됩니다.</p>
+
+</main>
+</body>
+</html>

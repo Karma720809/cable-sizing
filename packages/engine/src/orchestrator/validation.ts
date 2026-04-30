@@ -17,6 +17,8 @@
  *   E-VAL-008  efficiency / demandFactor out of (0, 1]
  *   E-VAL-009  maxVoltageDropPercent must be > 0
  *   E-VAL-010  invalid phase (not 1 or 3) or frequency (not 50 or 60)
+ *   E-VAL-011  shortCircuitKA provided but must be > 0
+ *   E-VAL-012  tripTimeS provided but must be > 0
  *
  * (E-DOMAIN-001 — efficiency = 0 — is subsumed by E-VAL-008.)
  */
@@ -51,24 +53,32 @@ export function validateCircuitInput(input: CircuitInput): EngineError[] {
     input.load.designCurrentOverrideA != null && input.load.designCurrentOverrideA > 0;
   const hasOverride = hasNewOverride || hasLegacyOverride;
   // v1.3 Stage B: transformer/motor get alternate "load specified" sources.
-  const hasFla =
-    input.load.type === 'motor' &&
-    typeof input.load.fla === 'number' &&
-    input.load.fla > 0;
-  const hasKva =
-    input.load.type === 'transformer' &&
-    typeof input.load.kva === 'number' &&
-    input.load.kva > 0;
-  const hasLoadSpec = hasOverride || hasFla || hasKva;
-  if (!hasLoadSpec) {
-    if (input.load.powerKW == null || !(input.load.powerKW > 0)) {
-      push(
-        errors,
-        'E-VAL-004',
-        'powerKW must be provided (or use FLA / kVA / designCurrentOverrideA / overrides.designCurrent)',
-        'load.powerKW',
-      );
-    }
+  //
+  // CR-OQ-1 / CR-OQ-4 require that *invalid* override values or *blank/null*
+  // motor FLA do NOT get preempted by E-VAL-004. We therefore treat a
+  // provided override/FLA field as "load specified" even when it's <= 0.
+  const hasNewOverrideProvided =
+    input.overrides?.designCurrent != null && Number.isFinite(input.overrides.designCurrent);
+  const hasLegacyOverrideProvided =
+    input.load.designCurrentOverrideA != null &&
+    Number.isFinite(input.load.designCurrentOverrideA);
+  const hasOverrideProvided = hasNewOverrideProvided || hasLegacyOverrideProvided;
+
+  // CR-OQ-1: motor FLA is optional (may be null/undefined); if it's missing,
+  // derivation can fall back to powerKW. Avoid throwing E-VAL-004 for motor
+  // so the derivation module can emit FieldState.status=incomplete/invalid
+  // (instead of masking it with an input-validation fatal error).
+  const hasFlaField = input.load.type === 'motor';
+  const hasKvaField = input.load.type === 'transformer';
+
+  const hasLoadSpec = hasOverrideProvided || hasFlaField || hasKvaField;
+  if (!hasLoadSpec && (input.load.powerKW == null || !(input.load.powerKW > 0))) {
+    push(
+      errors,
+      'E-VAL-004',
+      'powerKW must be provided (or use FLA / kVA / designCurrentOverrideA / overrides.designCurrent)',
+      'load.powerKW',
+    );
   }
   // PF/η/df range checks always run, but only when caller bothered to set
   // them (null is fine — defaults will fill, transformer/override paths
@@ -91,6 +101,21 @@ export function validateCircuitInput(input: CircuitInput): EngineError[] {
   // E-VAL-005
   if (!(input.route.lengthM > 0)) {
     push(errors, 'E-VAL-005', 'route.lengthM must be > 0', 'route.lengthM');
+  }
+
+  // E-VAL-011 / E-VAL-012 — SC inputs are optional only when blank/null.
+  // Explicit non-positive values are user input and must not be treated
+  // as "not provided" by the short-circuit step.
+  if (input.protection.shortCircuitKA != null && !(input.protection.shortCircuitKA > 0)) {
+    push(
+      errors,
+      'E-VAL-011',
+      'short_circuit_current_must_be_positive',
+      'protection.shortCircuitKA',
+    );
+  }
+  if (input.protection.tripTimeS != null && !(input.protection.tripTimeS > 0)) {
+    push(errors, 'E-VAL-012', 'trip_time_must_be_positive', 'protection.tripTimeS');
   }
 
   // E-VAL-006

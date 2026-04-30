@@ -1,0 +1,31 @@
+{
+  "id": "CSA-GC-06-BURIED-CABLE",
+  "description": "CSA engineering case: 40 kW Cu/PVC multicore buried D1 with ground ambient 30 C, soil 3.0 K.m/W, and groupCount=2 — buried correction factors raise required ampacity so 50 mm2 fails corrected Iz and 70 mm2 passes; current engine reports mixed because voltage-drop also passes at the ampacity-selected CSA.",
+  "spec": "CSA Patch 1 / final recommended CSA / buried D1 correction-factor path",
+  "input": {
+    "load": { "type": "general", "powerKW": 40, "powerFactor": 0.85, "efficiency": 0.9, "demandFactor": 1.0 },
+    "system": { "voltageV": 400, "phase": 3, "frequencyHz": 50, "topology": "3ph3w" },
+    "cable": { "conductorMaterial": "Cu", "insulationType": "PVC", "coreConfiguration": "3C", "cableType": "multicore" },
+    "installation": { "methodCode": "D1", "ambientTempC": 30, "soilResistivityK_m_W": 3.0, "groupCount": 2 },
+    "route": { "lengthM": 30 },
+    "protection": { "deviceType": "MCCB", "ratedCurrentA": 90, "operatingCurrentI2A": 130, "tripTimeS": null, "shortCircuitKA": null },
+    "projectPolicy": { "maxVoltageDropPercent": 5, "useReactance": false, "resistanceModel": "fixed_reference", "roundingPolicy": "next_standard_csa" }
+  },
+  "expected": {
+    "designCurrentApprox": 75.47,
+    "designCurrentTolerance": 0.01,
+    "correctionFactorTotalApprox": 0.6408,
+    "requiredAmpacityApprox": 117.78,
+    "voltageDropPercentApprox": 0.26,
+    "protectionCableAmpacityApprox": 91.63,
+    "recommendedCSAmm2": 70,
+    "selectionDriver": "mixed",
+    "ampacityStatus": "PASS",
+    "voltageDropStatus": "PASS",
+    "protectionStatus": "PASS",
+    "overallStatus": "PASS",
+    "warningCodesExact": [],
+    "errorCodesExact": [],
+    "loadedConductorsUsedExact": 3
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "id": "CSA-GC-02-VOLTAGE-DROP-GOVERNING",
+  "description": "CSA engineering case: 25 kW / 400 V / 3ph3w / Cu/PVC multicore / method C / L=250 m / max drop=3% — ampacity starts at 10 mm2, but smaller voltage-drop candidates fail and 35 mm2 is selected by voltage drop.",
+  "spec": "CSA Patch 1 / final recommended CSA / voltage-drop governing",
+  "input": {
+    "load": { "type": "general", "powerKW": 25, "powerFactor": 0.85, "efficiency": 1.0, "demandFactor": 1.0 },
+    "system": { "voltageV": 400, "phase": 3, "frequencyHz": 50, "topology": "3ph3w" },
+    "cable": { "conductorMaterial": "Cu", "insulationType": "PVC", "coreConfiguration": "3C", "cableType": "multicore" },
+    "installation": { "methodCode": "C", "ambientTempC": 30, "soilResistivityK_m_W": null, "groupCount": 1 },
+    "route": { "lengthM": 250 },
+    "protection": { "deviceType": "MCCB", "ratedCurrentA": 50, "operatingCurrentI2A": 72.5, "tripTimeS": null, "shortCircuitKA": null },
+    "projectPolicy": { "maxVoltageDropPercent": 3, "useReactance": false, "resistanceModel": "fixed_reference", "roundingPolicy": "next_standard_csa" }
+  },
+  "expected": {
+    "designCurrentApprox": 42.45,
+    "designCurrentTolerance": 0.01,
+    "correctionFactorTotalApprox": 1,
+    "requiredAmpacityApprox": 42.45,
+    "voltageDropPercentApprox": 2.37,
+    "protectionCableAmpacityApprox": 119,
+    "recommendedCSAmm2": 35,
+    "selectionDriver": "voltage_drop",
+    "ampacityStatus": "PASS",
+    "voltageDropStatus": "PASS",
+    "protectionStatus": "PASS",
+    "overallStatus": "PASS",
+    "warningCodesExact": [],
+    "errorCodesExact": [],
+    "loadedConductorsUsedExact": 3
+  }
+}

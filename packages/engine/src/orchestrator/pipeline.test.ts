@@ -149,6 +149,100 @@ describe('sizeCable — validation errors (E-VAL-*)', () => {
     );
     expect(r.errors.some((e) => e.code === 'E-VAL-010')).toBe(true);
   });
+
+  it('E-VAL-011: shortCircuitKA = 0 is explicit invalid input, not omitted', () => {
+    const r = sizeCable(
+      baseInput({
+        protection: {
+          deviceType: 'MCB',
+          ratedCurrentA: 50,
+          operatingCurrentI2A: 72.5,
+          tripTimeS: 0.1,
+          shortCircuitKA: 0,
+        },
+      }),
+    );
+    expect(r.errors).toContainEqual(
+      expect.objectContaining({
+        code: 'E-VAL-011',
+        field: 'protection.shortCircuitKA',
+        message: 'short_circuit_current_must_be_positive',
+      }),
+    );
+    expect(r.shortCircuit.status).toBe('FAIL');
+    expect(r.auditTrail.some((s) => s.reason.includes('SC criterion skipped'))).toBe(false);
+  });
+
+  it('E-VAL-011: shortCircuitKA < 0 is invalid', () => {
+    const r = sizeCable(
+      baseInput({
+        protection: {
+          deviceType: 'MCB',
+          ratedCurrentA: 50,
+          operatingCurrentI2A: 72.5,
+          tripTimeS: 0.1,
+          shortCircuitKA: -1,
+        },
+      }),
+    );
+    expect(r.errors.some((e) => e.code === 'E-VAL-011')).toBe(true);
+  });
+
+  it('E-VAL-012: tripTimeS = 0 is explicit invalid input, not omitted', () => {
+    const r = sizeCable(
+      baseInput({
+        protection: {
+          deviceType: 'MCB',
+          ratedCurrentA: 50,
+          operatingCurrentI2A: 72.5,
+          tripTimeS: 0,
+          shortCircuitKA: 10,
+        },
+      }),
+    );
+    expect(r.errors).toContainEqual(
+      expect.objectContaining({
+        code: 'E-VAL-012',
+        field: 'protection.tripTimeS',
+        message: 'trip_time_must_be_positive',
+      }),
+    );
+    expect(r.shortCircuit.status).toBe('FAIL');
+    expect(r.auditTrail.some((s) => s.reason.includes('SC criterion skipped'))).toBe(false);
+  });
+
+  it('E-VAL-012: tripTimeS < 0 is invalid', () => {
+    const r = sizeCable(
+      baseInput({
+        protection: {
+          deviceType: 'MCB',
+          ratedCurrentA: 50,
+          operatingCurrentI2A: 72.5,
+          tripTimeS: -0.1,
+          shortCircuitKA: 10,
+        },
+      }),
+    );
+    expect(r.errors.some((e) => e.code === 'E-VAL-012')).toBe(true);
+  });
+
+  it('shortCircuitKA and tripTimeS both null remain omitted optional SC data', () => {
+    const r = sizeCable(
+      baseInput({
+        protection: {
+          deviceType: 'MCB',
+          ratedCurrentA: 50,
+          operatingCurrentI2A: 72.5,
+          tripTimeS: null,
+          shortCircuitKA: null,
+        },
+      }),
+    );
+    expect(r.errors.some((e) => e.code === 'E-VAL-011' || e.code === 'E-VAL-012')).toBe(
+      false,
+    );
+    expect(r.auditTrail.some((s) => s.reason.includes('SC criterion skipped'))).toBe(true);
+  });
 });
 
 describe('sizeCable — lookup errors (E-LOOKUP-*)', () => {
@@ -266,6 +360,190 @@ describe('sizeCable — warnings (W-*)', () => {
     if (r.recommendedCSAmm2 != null) {
       expect(r.protectionCoordination.cableAmpacityIzA).toBeGreaterThanOrEqual(160);
     }
+  });
+});
+
+describe('sizeCable — CR-OQ-1/CR-OQ-4 designCurrent blocking', () => {
+  it('motor fla = 0 → designCurrent FieldState invalid, sizing blocked', () => {
+    const r = sizeCable(
+      baseInput({
+        load: {
+          type: 'motor',
+          powerKW: 25,
+          powerFactor: 0.85,
+          efficiency: 0.9,
+          demandFactor: 1.0,
+          fla: 0,
+        },
+      }),
+    );
+    expect(r.overallStatus).toBe('INCOMPLETE');
+    expect(r.recommendedCSAmm2).toBeNull();
+    expect(r.fieldStates?.designCurrent?.status).toBe('invalid');
+    expect(r.fieldStates?.designCurrent?.value).toBeNull();
+  });
+
+  it('motor fla < 0 → designCurrent FieldState invalid, sizing blocked', () => {
+    const r = sizeCable(
+      baseInput({
+        load: {
+          type: 'motor',
+          powerKW: 25,
+          powerFactor: 0.85,
+          efficiency: 0.9,
+          demandFactor: 1.0,
+          fla: -5,
+        },
+      }),
+    );
+    expect(r.overallStatus).toBe('INCOMPLETE');
+    expect(r.recommendedCSAmm2).toBeNull();
+    expect(r.fieldStates?.designCurrent?.status).toBe('invalid');
+    expect(r.fieldStates?.designCurrent?.value).toBeNull();
+  });
+
+  it('override designCurrent = 0 → designCurrent FieldState invalid, sizing blocked', () => {
+    const r = sizeCable(baseInput({ overrides: { designCurrent: 0 } }));
+    expect(r.overallStatus).toBe('INCOMPLETE');
+    expect(r.recommendedCSAmm2).toBeNull();
+    expect(r.fieldStates?.designCurrent?.status).toBe('invalid');
+    expect(r.fieldStates?.designCurrent?.value).toBeNull();
+  });
+
+  it('motor fla blank/null + missing powerKW → designCurrent incomplete, sizing blocked', () => {
+    const r = sizeCable(
+      baseInput({
+        load: {
+          type: 'motor',
+          powerKW: null,
+          powerFactor: null,
+          efficiency: null,
+          demandFactor: 1.0,
+          fla: null,
+        },
+      }),
+    );
+    expect(r.overallStatus).toBe('INCOMPLETE');
+    expect(r.recommendedCSAmm2).toBeNull();
+    expect(r.fieldStates?.designCurrent?.status).toBe('incomplete');
+    expect(r.fieldStates?.designCurrent?.value).toBeNull();
+  });
+
+  it('motor fla blank/null + valid powerKW → falls back to IB_3PH_KW', () => {
+    const r = sizeCable(
+      baseInput({
+        load: {
+          type: 'motor',
+          powerKW: 25,
+          powerFactor: 0.85,
+          efficiency: 0.9,
+          demandFactor: 1.0,
+          fla: null,
+        },
+      }),
+    );
+    expect(r.fieldStates?.designCurrent?.status).toBe('valid');
+    expect(r.fieldStates?.designCurrent?.formula).toBe('IB_3PH_KW');
+    expect(r.fieldStates?.designCurrent?.value).not.toBeNull();
+    if (r.fieldStates?.designCurrent?.value != null) {
+      expect(r.fieldStates.designCurrent.value as number).toBeCloseTo(47.17, 2);
+    }
+    expect(r.recommendedCSAmm2).not.toBeNull();
+  });
+
+  it('transformer kva = 0 → designCurrent FieldState invalid, no generic powerKW error, sizing blocked', () => {
+    const r = sizeCable(
+      baseInput({
+        load: {
+          type: 'transformer',
+          powerKW: null,
+          powerFactor: null,
+          efficiency: null,
+          demandFactor: 1.0,
+          kva: 0,
+        },
+      }),
+    );
+    expect(r.errors.some((e) => e.code === 'E-VAL-004')).toBe(false);
+    expect(r.overallStatus).toBe('INCOMPLETE');
+    expect(r.recommendedCSAmm2).toBeNull();
+    expect(r.fieldStates?.designCurrent?.status).toBe('invalid');
+    expect(r.fieldStates?.designCurrent?.reason).toBe('transformer_kva_must_be_positive');
+  });
+
+  it('transformer kva < 0 → designCurrent FieldState invalid, sizing blocked', () => {
+    const r = sizeCable(
+      baseInput({
+        load: {
+          type: 'transformer',
+          powerKW: null,
+          powerFactor: null,
+          efficiency: null,
+          demandFactor: 1.0,
+          kva: -10,
+        },
+      }),
+    );
+    expect(r.overallStatus).toBe('INCOMPLETE');
+    expect(r.recommendedCSAmm2).toBeNull();
+    expect(r.fieldStates?.designCurrent?.status).toBe('invalid');
+    expect(r.fieldStates?.designCurrent?.reason).toBe('transformer_kva_must_be_positive');
+  });
+
+  it('transformer kva null → designCurrent FieldState incomplete, not invalid', () => {
+    const r = sizeCable(
+      baseInput({
+        load: {
+          type: 'transformer',
+          powerKW: null,
+          powerFactor: null,
+          efficiency: null,
+          demandFactor: 1.0,
+          kva: null,
+        },
+      }),
+    );
+    expect(r.errors.some((e) => e.code === 'E-VAL-004')).toBe(false);
+    expect(r.recommendedCSAmm2).toBeNull();
+    expect(r.fieldStates?.designCurrent?.status).toBe('incomplete');
+    expect(r.fieldStates?.designCurrent?.reason).toBe('missing_transformer_kva');
+  });
+
+  it('transformer kva undefined → designCurrent FieldState incomplete, not invalid', () => {
+    const r = sizeCable(
+      baseInput({
+        load: {
+          type: 'transformer',
+          powerKW: null,
+          powerFactor: null,
+          efficiency: null,
+          demandFactor: 1.0,
+        },
+      }),
+    );
+    expect(r.errors.some((e) => e.code === 'E-VAL-004')).toBe(false);
+    expect(r.recommendedCSAmm2).toBeNull();
+    expect(r.fieldStates?.designCurrent?.status).toBe('incomplete');
+    expect(r.fieldStates?.designCurrent?.reason).toBe('missing_transformer_kva');
+  });
+
+  it('transformer kva > 0 → valid design current calculation', () => {
+    const r = sizeCable(
+      baseInput({
+        load: {
+          type: 'transformer',
+          powerKW: null,
+          powerFactor: null,
+          efficiency: null,
+          demandFactor: 1.0,
+          kva: 100,
+        },
+      }),
+    );
+    expect(r.errors.some((e) => e.code === 'E-VAL-004')).toBe(false);
+    expect(r.fieldStates?.designCurrent?.status).toBe('valid');
+    expect(r.fieldStates?.designCurrent?.formula).toBe('IB_3PH_KVA');
+    expect(r.designCurrentA).toBeCloseTo(144.34, 2);
   });
 });
 
@@ -444,7 +722,7 @@ describe('sizeCable — Phase 4A.3 audit extensions', () => {
           ratedCurrentA: 63,
           operatingCurrentI2A: 91.35,
           tripTimeS: 0.1,
-          shortCircuitKA: 0, // skip SC so only ampacity vs vdrop compete
+          shortCircuitKA: null, // omit SC so only ampacity vs vdrop compete
         },
         projectPolicy: {
           maxVoltageDropPercent: 3,

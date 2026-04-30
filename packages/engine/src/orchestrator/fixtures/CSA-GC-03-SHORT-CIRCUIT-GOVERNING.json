@@ -1,0 +1,33 @@
+{
+  "id": "CSA-GC-03-SHORT-CIRCUIT-GOVERNING",
+  "description": "CSA engineering case: 5 kW load on short Cu/PVC multicore method C run — ampacity allows 1.5 mm2, but S = Isc*sqrt(t)/k requires 60.50 mm2 and the next standard size is 70 mm2.",
+  "spec": "CSA Patch 1 / final recommended CSA / short-circuit governing",
+  "input": {
+    "load": { "type": "general", "powerKW": 5, "powerFactor": 0.85, "efficiency": 0.9, "demandFactor": 1.0 },
+    "system": { "voltageV": 400, "phase": 3, "frequencyHz": 50, "topology": "3ph3w" },
+    "cable": { "conductorMaterial": "Cu", "insulationType": "PVC", "coreConfiguration": "3C", "cableType": "multicore" },
+    "installation": { "methodCode": "C", "ambientTempC": 30, "soilResistivityK_m_W": null, "groupCount": 1 },
+    "route": { "lengthM": 20 },
+    "protection": { "deviceType": "MCCB", "ratedCurrentA": 20, "operatingCurrentI2A": 29, "tripTimeS": 0.1, "shortCircuitKA": 22 },
+    "projectPolicy": { "maxVoltageDropPercent": 5, "useReactance": false, "resistanceModel": "fixed_reference", "roundingPolicy": "next_standard_csa" }
+  },
+  "expected": {
+    "designCurrentApprox": 9.43,
+    "designCurrentTolerance": 0.01,
+    "correctionFactorTotalApprox": 1,
+    "requiredAmpacityApprox": 9.43,
+    "voltageDropPercentApprox": 1.03,
+    "shortCircuitRequiredCsaApprox": 60.5,
+    "protectionCableAmpacityApprox": 184,
+    "recommendedCSAmm2": 70,
+    "selectionDriver": "short_circuit",
+    "ampacityStatus": "PASS",
+    "voltageDropStatus": "PASS",
+    "shortCircuitStatus": "PASS",
+    "protectionStatus": "PASS",
+    "overallStatus": "PASS",
+    "warningCodesExact": [],
+    "errorCodesExact": [],
+    "loadedConductorsUsedExact": 3
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "id": "GC-LV-22-BURIED-SOIL-MISSING",
+  "description": "Buried reference method D1 with missing soil resistivity — validation fails closed per soil-required policy.",
+  "spec": "Golden Patch B / CR-OQ-5 soil required for buried methods",
+  "input": {
+    "load": { "type": "general", "powerKW": 25, "powerFactor": 0.85, "efficiency": 0.9, "demandFactor": 1.0 },
+    "system": { "voltageV": 400, "phase": 3, "frequencyHz": 50, "topology": "3ph3w" },
+    "cable": { "conductorMaterial": "Cu", "insulationType": "PVC", "coreConfiguration": "3C", "cableType": "multicore" },
+    "installation": { "methodCode": "D1", "ambientTempC": 20, "soilResistivityK_m_W": null, "groupCount": 1 },
+    "route": { "lengthM": 50 },
+    "protection": { "deviceType": "MCB", "ratedCurrentA": 50, "operatingCurrentI2A": 72.5, "tripTimeS": 0.1, "shortCircuitKA": 10 },
+    "projectPolicy": { "maxVoltageDropPercent": 5, "useReactance": false, "resistanceModel": "fixed_reference", "roundingPolicy": "next_standard_csa" }
+  },
+  "expected": {
+    "designCurrentApprox": 0,
+    "designCurrentTolerance": 0.001,
+    "overallStatus": "INCOMPLETE",
+    "recommendedCSAmm2": null,
+    "selectionDriver": "none",
+    "ampacityStatus": "FAIL",
+    "voltageDropStatus": "FAIL",
+    "shortCircuitStatus": "FAIL",
+    "protectionStatus": "INCOMPLETE",
+    "warningCodesExact": [],
+    "errorCodesExact": ["E-VAL-003"],
+    "errorFields": ["installation.soilResistivityK_m_W"],
+    "errorMessages": ["soilResistivityK_m_W is required for ground reference methods (D1)"],
+    "loadedConductorsUsedExact": null
+  }
+}

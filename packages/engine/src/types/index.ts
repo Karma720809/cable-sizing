@@ -351,6 +351,7 @@ export type AuditCriterion =
   | 'ampacity'
   | 'voltageDrop'
   | 'shortCircuit'
+  | 'armour'
   | 'recommended'
   | 'protection'
   | 'overall';
@@ -403,6 +404,8 @@ export type ErrorCode =
   | 'E-VAL-008' // efficiency / demandFactor out of range
   | 'E-VAL-009' // maxVoltageDropPercent <= 0
   | 'E-VAL-010' // invalid phase/frequency
+  | 'E-VAL-011' // shortCircuitKA provided but <= 0
+  | 'E-VAL-012' // tripTimeS provided but <= 0
   | 'E-LOOKUP-001' // ampacity combination missing
   | 'E-LOOKUP-002' // correction factor conservative lower not available
   | 'E-LOOKUP-003' // impedance for csa missing
@@ -567,7 +570,12 @@ export type WarningCode =
    * tables, so 3-loaded was used. Harmonic / 4-loaded derating
    * (k4) is explicitly out of scope per §6.2 (CR-OQ-3).
    */
-  | 'W-CR-008';
+  | 'W-CR-008'
+  /**
+   * Armour was selected but armour CSA / k_armour could not be resolved,
+   * so armour short-circuit verification was not evaluated.
+   */
+  | 'W-CR-009';
 
 // ─────────────────────────────────────────────────────────────────────
 // Dataset shape (matches iec60364_lv_v1 on disk)

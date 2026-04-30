@@ -13,15 +13,7 @@ export class AuditBuilder {
   private steps: AuditStep[] = [];
   private counter = 0;
 
-  add(entry: {
-    criterion: AuditCriterion;
-    inputs: Record<string, unknown>;
-    formula: string;
-    intermediateValues: Record<string, unknown>;
-    decision: Decision;
-    reason: string;
-    code?: string;
-  }): AuditStep {
+  add(entry: Omit<AuditStep, 'step'>): AuditStep {
     this.counter += 1;
     const step: AuditStep = {
       step: this.counter,
@@ -32,6 +24,7 @@ export class AuditBuilder {
       decision: entry.decision,
       reason: entry.reason,
       ...(entry.code ? { code: entry.code } : {}),
+      ...(entry.derivedFields ? { derivedFields: entry.derivedFields } : {}),
     };
     this.steps.push(step);
     return step;

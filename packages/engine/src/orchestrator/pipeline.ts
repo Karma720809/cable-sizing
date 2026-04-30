@@ -356,7 +356,22 @@ export function sizeCable(input: CircuitInput, options: SizeCableOptions = {}): 
   fieldStates.loadedConductors = lcRes.state;
   if (lcRes.warnings.length > 0) warnings.push(...lcRes.warnings);
   if (lcRes.info.length > 0) info.push(...lcRes.info);
-  const lcDerived = lcRes.loadedConductors ?? (resolved.system.phase === 1 ? 2 : 3);
+  if (lcRes.state.status !== 'valid' || lcRes.loadedConductors == null) {
+    audit.add({
+      criterion: 'ampacity',
+      inputs: { state: lcRes.state },
+      formula: lcRes.state.formula ?? 'loadedConductors derivation',
+      intermediateValues: { loadedConductors: lcRes.loadedConductors },
+      decision: lcRes.state.status === 'invalid' ? 'FAIL' : 'INCOMPLETE',
+      reason: lcRes.state.reason ?? 'loaded conductors could not be derived',
+    });
+    return buildSkeleton(errors, warnings, audit.build(), ibA, dataset.meta.datasetId, {
+      maxDropPercent: resolved.projectPolicy.maxVoltageDropPercent,
+      fieldStates,
+      info,
+    });
+  }
+  const lcDerived = lcRes.loadedConductors;
   if (lcDerived === 4) {
     warnings.push({
       code: 'W-CR-008',
@@ -926,7 +941,7 @@ export function sizeCable(input: CircuitInput, options: SizeCableOptions = {}): 
     if (armRes.warnings.length > 0) warnings.push(...armRes.warnings);
     if (armRes.armour) {
       audit.add({
-        criterion: 'shortCircuit',
+        criterion: 'armour',
         inputs: {
           armourType: armRes.armour.armourType,
           cableConstruction: armRes.armour.cableConstruction,
@@ -937,12 +952,22 @@ export function sizeCable(input: CircuitInput, options: SizeCableOptions = {}): 
           armourCsaMm2: armRes.armour.armourCsaMm2,
           kArmour: armRes.armour.kArmour,
           source: armRes.state.source,
+          status: armRes.state.status,
+          reason: armRes.state.reason ?? null,
+          datasetRef: armRes.state.datasetRef ?? armRes.armour.sourceRef,
         },
         decision: 'INFO',
         reason:
           armRes.state.source === 'override'
             ? `armour CSA overridden to ${armRes.armour.armourCsaMm2} mm²`
             : `armour CSA ${armRes.armour.armourCsaMm2} mm² resolved from ${armRes.armour.sourceRef}`,
+        derivedFields: [
+          {
+            fieldId: 'armourCsa',
+            state: armRes.state,
+            description: 'Armour CSA / k_armour lookup state',
+          },
+        ],
       });
       if (scA > 0 && tA > 0) {
         // S_arm_req = sqrt(I_fault² · t) / k_arm = I_fault · √t / k_arm
@@ -956,7 +981,7 @@ export function sizeCable(input: CircuitInput, options: SizeCableOptions = {}): 
           });
         }
         audit.add({
-          criterion: 'shortCircuit',
+          criterion: 'armour',
           inputs: { Isc: scA, tripTimeS: tA, kArmour: armRes.armour.kArmour },
           formula: 'S_arm_req = Isc·√t / k_arm',
           intermediateValues: {
@@ -971,6 +996,36 @@ export function sizeCable(input: CircuitInput, options: SizeCableOptions = {}): 
           ...(armPass ? {} : { code: 'W-CR-007' }),
         });
       }
+    } else {
+      audit.add({
+        criterion: 'armour',
+        inputs: {
+          armourType: input.cable.armourType,
+          conductorCsaMm2: recommended,
+        },
+        formula: 'armour CSA lookup (cableConstruction, conductorCsaMm2)',
+        intermediateValues: {
+          armourCsaStatus: armRes.state.status,
+          armourCsaReason: armRes.state.reason ?? null,
+          source: armRes.state.source,
+          status: armRes.state.status,
+          reason: armRes.state.reason ?? null,
+          datasetRef: armRes.state.datasetRef ?? null,
+        },
+        decision: armRes.state.status === 'invalid' ? 'FAIL' : 'INCOMPLETE',
+        reason:
+          armRes.state.status === 'invalid'
+            ? 'armour CSA override is invalid; armour short-circuit verification was not evaluated'
+            : 'armour CSA / k_armour unavailable; armour short-circuit verification was not evaluated',
+        ...(armRes.warnings.some((w) => w.code === 'W-CR-009') ? { code: 'W-CR-009' } : {}),
+        derivedFields: [
+          {
+            fieldId: 'armourCsa',
+            state: armRes.state,
+            description: 'Armour CSA / k_armour lookup state',
+          },
+        ],
+      });
     }
   }
 

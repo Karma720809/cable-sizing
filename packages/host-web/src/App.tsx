@@ -15,7 +15,7 @@
  * Scope explicitly *not* in App-MVP-1: persistence, multi-circuit,
  * charts, formula rendering.
  */
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useEngineWorker } from './hooks/useEngineWorker.js';
 import {
   CircuitForm,
@@ -39,6 +39,11 @@ export function App(): React.ReactElement {
   const [pong, setPong] = useState<{ engineVersion: string; apiVersion: number } | null>(null);
   const [manifest, setManifest] = useState<DatasetManifest | null>(null);
   const [busy, setBusy] = useState(false);
+
+  const onFormChange = useCallback((next: React.SetStateAction<FormState>): void => {
+    setForm((prev) => (typeof next === 'function' ? next(prev) : next));
+    setLastRes(null);
+  }, []);
 
   // On worker ready: ping + manifest once.
   useEffect(() => {
@@ -81,7 +86,7 @@ export function App(): React.ReactElement {
         <div className="col col-form">
           <CircuitForm
             value={form}
-            onChange={setForm}
+            onChange={onFormChange}
             onSubmit={() => void onSubmit()}
             busy={busy}
             result={lastResult}

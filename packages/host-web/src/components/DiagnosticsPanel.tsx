@@ -19,6 +19,8 @@ interface Props {
 }
 
 export function DiagnosticsPanel({ pong, manifest, lastResult }: Props): React.ReactElement {
+  const correctionFactorsEvaluated = lastResult ? hasEvaluatedCorrectionFactors(lastResult) : false;
+
   return (
     <aside className="diagnostics">
       <h3>Diagnostics</h3>
@@ -73,15 +75,26 @@ export function DiagnosticsPanel({ pong, manifest, lastResult }: Props): React.R
             <dd>
               <code>{lastResult.ampacity.lookupPolicyUsed ?? '—'}</code>
             </dd>
-            <dt>k1 · k2 · k3 (total)</dt>
-            <dd>
-              <code>
-                {lastResult.ampacity.correctionFactors.k1} ·{' '}
-                {lastResult.ampacity.correctionFactors.k2} ·{' '}
-                {lastResult.ampacity.correctionFactors.k3} ={' '}
-                {lastResult.ampacity.correctionFactors.total.toFixed(3)}
-              </code>
-            </dd>
+            {correctionFactorsEvaluated ? (
+              <>
+                <dt>k1 · k2 · k3 (total)</dt>
+                <dd>
+                  <code>
+                    {lastResult.ampacity.correctionFactors.k1} ·{' '}
+                    {lastResult.ampacity.correctionFactors.k2} ·{' '}
+                    {lastResult.ampacity.correctionFactors.k3} ={' '}
+                    {lastResult.ampacity.correctionFactors.total.toFixed(3)}
+                  </code>
+                </dd>
+              </>
+            ) : (
+              <>
+                <dt>correction factors</dt>
+                <dd>
+                  <code>Not evaluated</code>
+                </dd>
+              </>
+            )}
           </dl>
         ) : (
           <p className="muted">No sizing run yet.</p>
@@ -89,4 +102,12 @@ export function DiagnosticsPanel({ pong, manifest, lastResult }: Props): React.R
       </section>
     </aside>
   );
+}
+
+function hasEvaluatedCorrectionFactors(result: SizingResult): boolean {
+  if (result.fieldStates?.kTotal) {
+    return result.fieldStates.kTotal.status === 'valid';
+  }
+
+  return result.ampacity.selectedCSAmm2 != null && result.ampacity.cableRatingA != null;
 }

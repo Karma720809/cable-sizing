@@ -29,6 +29,8 @@ export const CODE_HINTS: Record<string, string> = {
     'Resistance was temperature-corrected per IEC 60287-1-1 using the loading-ratio θ_op estimate.',
   'W-TEMP-CORRECTION-CAPPED':
     'One or more scanned csa had IB > IZ; loading ratio was clamped to 1.0 for the θ_op estimate.',
+  'W-CR-009':
+    'Armour was selected, but armour CSA or k_armour could not be resolved, so armour short-circuit verification was not evaluated.',
 
   // ─ Errors (engine) ─
   'E-VAL-001': 'Voltage must be > 0.',

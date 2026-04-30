@@ -50,6 +50,12 @@ export type FieldReason =
   | 'no_dataset_match'
   | 'not_applicable'
   | 'out_of_range'
+  | 'loaded_conductors_override_out_of_range'
+  | 'armour_csa_override_must_be_positive'
+  | 'missing_transformer_kva'
+  | 'transformer_kva_must_be_positive'
+  | 'short_circuit_current_must_be_positive'
+  | 'trip_time_must_be_positive'
   | 'default_fallback'
   | 'override_applied'
   | 'legacy_preserved_no_recalc';
@@ -143,5 +149,19 @@ export const FieldStateBuilder = {
   },
   unavailable(reason: FieldReason = 'not_applicable'): FieldState<never> {
     return { source: 'auto_dataset', status: 'unavailable', value: null, reason };
+  },
+  invalid<T>(
+    source: FieldSource,
+    reason: FieldReason = 'out_of_range',
+    opts?: { formula?: string; inputs?: Record<string, unknown> },
+  ): FieldState<T> {
+    return {
+      source,
+      status: 'invalid',
+      value: null,
+      reason,
+      ...(opts?.formula ? { formula: opts.formula } : {}),
+      ...(opts?.inputs ? { inputs: opts.inputs } : {}),
+    };
   },
 };

@@ -96,7 +96,7 @@ const cases: Case[] = [
           ratedCurrentA: 100,
           operatingCurrentI2A: 145,
           tripTimeS: 0.1,
-          shortCircuitKA: 0, // skip SC
+          shortCircuitKA: null, // omit SC
         },
         projectPolicy: {
           maxVoltageDropPercent: 3,

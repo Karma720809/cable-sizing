@@ -88,20 +88,22 @@ describe('schema (v1.3 Stage A additive extensions)', () => {
     expect(r.ok).toBe(true);
   });
 
-  it('rejects overrides.loadedConductors when non-positive', () => {
+  it('accepts semantically invalid loadedConductors override for engine fail-closed handling', () => {
     const r = parseCircuitInput({
       ...BASE,
       overrides: { loadedConductors: 0 },
     });
-    expect(r.ok).toBe(false);
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.value.overrides?.loadedConductors).toBe(0);
   });
 
-  it('rejects overrides.armourCsaMm2 when negative', () => {
+  it('accepts semantically invalid armourCsaMm2 override for engine fail-closed handling', () => {
     const r = parseCircuitInput({
       ...BASE,
       overrides: { armourCsaMm2: -10 },
     });
-    expect(r.ok).toBe(false);
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.value.overrides?.armourCsaMm2).toBe(-10);
   });
 
   it('accepts neutralCarriesCurrent toggle', () => {

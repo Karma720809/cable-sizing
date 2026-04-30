@@ -25,6 +25,7 @@ import type {
 } from '@cable-sizing/engine';
 import { hintFor } from './codeHints.js';
 import { DerivedFieldDisplay } from './circuit/DerivedFieldDisplay.js';
+import { StatusBadge } from './circuit/StatusBadge.js';
 
 export function ResultPanel({ res }: { res: WorkerResponse | null }): React.ReactElement {
   if (!res) {
@@ -73,6 +74,19 @@ export function ResultPanel({ res }: { res: WorkerResponse | null }): React.Reac
   }
 
   const r = res.data.result;
+  const designCurrentState = r.fieldStates?.designCurrent;
+  const ibHeroValue =
+    designCurrentState && designCurrentState.status === 'valid' && designCurrentState.value != null
+      ? `${round(designCurrentState.value as number, 2)} A`
+      : '—';
+  const ibHeroMeta =
+    designCurrentState && designCurrentState.status !== 'valid' ? (
+      <span className="muted">
+        {' '}
+        <StatusBadge status={designCurrentState.status} />
+        {designCurrentState.reason ? ` (${designCurrentState.reason})` : ''}
+      </span>
+    ) : null;
   return (
     <section
       className={`panel status-${r.overallStatus.toLowerCase()}`}
@@ -92,7 +106,7 @@ export function ResultPanel({ res }: { res: WorkerResponse | null }): React.Reac
           </span>
         </div>
         <div className="hero-meta">
-          <KV k="IB (design current)" v={`${round(r.designCurrentA, 2)} A`} />
+          <KV k="IB (design current)" v={<span>{ibHeroValue}{ibHeroMeta}</span>} />
           <KV k="Driver" v={<code>{r.selectionDriver}</code>} />
         </div>
       </div>
@@ -157,6 +171,13 @@ export function ResultPanel({ res }: { res: WorkerResponse | null }): React.Reac
 // ─── Criteria table ───────────────────────────────────────────────────
 
 function Criteria({ r }: { r: SizingResult }): React.ReactElement {
+  const ampacityEvaluated = isAmpacityEvaluated(r);
+  const voltageDropEvaluated = r.voltageDrop.calculatedDropPercent != null;
+  const shortCircuitEvaluated = r.shortCircuit.minimumCSAmm2 != null && r.shortCircuit.kValue > 0;
+  const protectionEvaluated =
+    r.recommendedCSAmm2 != null && r.protectionCoordination.cableAmpacityIzA > 0;
+  const armourSummary = getArmourSummary(r);
+
   return (
     <table className="criteria" aria-label="Criteria">
       <thead>
@@ -173,8 +194,14 @@ function Criteria({ r }: { r: SizingResult }): React.ReactElement {
             <StatusChip s={r.ampacity.status} />
           </td>
           <td>
-            IZ = {round(r.ampacity.cableRatingA, 1)} A @ {r.ampacity.selectedCSAmm2 ?? '—'}{' '}
-            mm² (k<sub>total</sub> = {r.ampacity.correctionFactors.total.toFixed(3)})
+            {ampacityEvaluated ? (
+              <>
+                IZ = {round(r.ampacity.cableRatingA, 1)} A @ {r.ampacity.selectedCSAmm2}{' '}
+                mm² (k<sub>total</sub> = {r.ampacity.correctionFactors.total.toFixed(3)})
+              </>
+            ) : (
+              <span className="muted">Not evaluated</span>
+            )}
           </td>
         </tr>
         <tr>
@@ -183,8 +210,14 @@ function Criteria({ r }: { r: SizingResult }): React.ReactElement {
             <StatusChip s={r.voltageDrop.status} />
           </td>
           <td>
-            ΔU = {round(r.voltageDrop.calculatedDropPercent, 3)} % (limit{' '}
-            {r.voltageDrop.maxAllowedPercent} %)
+            {voltageDropEvaluated ? (
+              <>
+                ΔU = {round(r.voltageDrop.calculatedDropPercent, 3)} % (limit{' '}
+                {r.voltageDrop.maxAllowedPercent} %)
+              </>
+            ) : (
+              <span className="muted">Not evaluated</span>
+            )}
           </td>
         </tr>
         <tr>
@@ -193,18 +226,39 @@ function Criteria({ r }: { r: SizingResult }): React.ReactElement {
             <StatusChip s={r.shortCircuit.status} />
           </td>
           <td>
-            S<sub>req</sub> = {round(r.shortCircuit.minimumCSAmm2, 2)} mm² (k ={' '}
-            {r.shortCircuit.kValue})
+            {shortCircuitEvaluated ? (
+              <>
+                S<sub>req</sub> = {round(r.shortCircuit.minimumCSAmm2, 2)} mm² (k ={' '}
+                {r.shortCircuit.kValue})
+              </>
+            ) : (
+              <span className="muted">Not evaluated</span>
+            )}
           </td>
         </tr>
+        {armourSummary && (
+          <tr data-testid="armour-criteria-row">
+            <td>Armour</td>
+            <td>
+              <StatusChip s={armourSummary.status} />
+            </td>
+            <td>{armourSummary.detail}</td>
+          </tr>
+        )}
         <tr>
           <td>Protection coord.</td>
           <td>
             <StatusChip s={r.protectionCoordination.status} />
           </td>
           <td>
-            C1 (IB≤In≤IZ): <Ok p={r.protectionCoordination.condition1.pass} /> — C2
-            (I₂≤1.45·IZ): <Ok p={r.protectionCoordination.condition2.pass} />
+            {protectionEvaluated ? (
+              <>
+                C1 (IB≤In≤IZ): <Ok p={r.protectionCoordination.condition1.pass} /> — C2
+                (I₂≤1.45·IZ): <Ok p={r.protectionCoordination.condition2.pass} />
+              </>
+            ) : (
+              <span className="muted">Not evaluated</span>
+            )}
           </td>
         </tr>
       </tbody>
@@ -275,6 +329,54 @@ function Ok({ p }: { p: boolean | null }): React.ReactElement {
   );
 }
 
+function getArmourSummary(
+  r: SizingResult,
+): { status: 'PASS' | 'INFO' | 'WARNING' | 'INCOMPLETE' | 'FAIL' | 'INVALID'; detail: React.ReactNode } | null {
+  const state = r.fieldStates?.armourCsa;
+  const armourSteps = r.auditTrail.filter((s) => s.criterion === 'armour');
+  const armourWarning = r.warnings.find((w) => w.code === 'W-CR-007' || w.code === 'W-CR-009');
+
+  if (!state && armourSteps.length === 0 && !armourWarning) return null;
+
+  if (state?.status === 'valid') {
+    const value = state.value as { armourCsaMm2?: number; kArmour?: number } | null;
+    const scStep = armourSteps.find((s) => s.formula === 'S_arm_req = Isc·√t / k_arm');
+    const status = scStep?.decision === 'WARNING' ? 'WARNING' : scStep?.decision === 'PASS' ? 'PASS' : 'INFO';
+    return {
+      status,
+      detail: (
+        <>
+          Armour CSA = {round(value?.armourCsaMm2, 2)} mm², k_armour ={' '}
+          {round(value?.kArmour, 0)}
+          {state.source === 'override' ? ' (override)' : ''}
+        </>
+      ),
+    };
+  }
+
+  if (state?.status === 'invalid') {
+    return {
+      status: 'INVALID',
+      detail: (
+        <>
+          Armour verification not evaluated; reason = {state.reason ?? 'invalid override'}
+        </>
+      ),
+    };
+  }
+
+  const reason =
+    state?.reason ??
+    (armourWarning?.code === 'W-CR-009' ? armourWarning.message : undefined) ??
+    armourSteps.find((s) => s.decision === 'INCOMPLETE' || s.decision === 'WARNING')?.reason ??
+    'unavailable';
+
+  return {
+    status: armourWarning?.code === 'W-CR-009' ? 'WARNING' : 'INCOMPLETE',
+    detail: <>Armour verification not evaluated; reason = {reason}</>,
+  };
+}
+
 function CodeChip({ code }: { code: string }): React.ReactElement {
   return (
     <code className="code-chip" title={hintFor(code)}>
@@ -286,6 +388,14 @@ function CodeChip({ code }: { code: string }): React.ReactElement {
 function round(n: number | null | undefined, d: number): string {
   if (n == null || !Number.isFinite(n)) return '—';
   return n.toFixed(d);
+}
+
+function isAmpacityEvaluated(r: SizingResult): boolean {
+  if (r.fieldStates?.kTotal) {
+    return r.fieldStates.kTotal.status === 'valid' && r.ampacity.selectedCSAmm2 != null;
+  }
+
+  return r.ampacity.selectedCSAmm2 != null && r.ampacity.cableRatingA != null;
 }
 
 // ─── MV result rendering ──────────────────────────────────────────────

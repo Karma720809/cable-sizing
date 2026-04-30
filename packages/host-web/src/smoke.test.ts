@@ -81,6 +81,38 @@ describe('host round-trip smoke — structurally-invalid input hits E-API-002', 
   });
 });
 
+describe('host form assembly — reference method compatibility guard', () => {
+  it('does not submit a stale multicore method after switching to single-core', () => {
+    const input = buildCircuitInput({
+      ...INITIAL_FORM,
+      cableType: 'single-core',
+      methodCode: 'C',
+    }) as { installation: { methodCode: string } };
+
+    expect(input.installation.methodCode).toBe('B1');
+  });
+
+  it('does not submit a stale single-core method after switching to multicore', () => {
+    const input = buildCircuitInput({
+      ...INITIAL_FORM,
+      cableType: 'multicore',
+      methodCode: 'F',
+    }) as { installation: { methodCode: string } };
+
+    expect(input.installation.methodCode).toBe('B2');
+  });
+
+  it('keeps an existing method when it remains compatible', () => {
+    const input = buildCircuitInput({
+      ...INITIAL_FORM,
+      cableType: 'multicore',
+      methodCode: 'E',
+    }) as { installation: { methodCode: string } };
+
+    expect(input.installation.methodCode).toBe('E');
+  });
+});
+
 describe('host round-trip smoke — MV form (TC-01) → sizeCableMv', () => {
   const mvForm: FormState = { ...INITIAL_FORM, voltageClass: 'MV' };
   const input = buildMvCircuitInput(mvForm);

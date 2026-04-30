@@ -162,6 +162,30 @@ describe('AC-5: loadedConductors derivation', () => {
     expect(r.ampacity.loadedConductorsUsed).toBe(2);
     expect(r.warnings.find((w) => w.code === 'W-CR-005')).toBeDefined();
   });
+
+  it('overrides.loadedConductors=3 → valid override', () => {
+    const r = sizeCable({ ...BASE, overrides: { loadedConductors: 3 } });
+    expect(r.fieldStates?.loadedConductors?.source).toBe('override');
+    expect(r.fieldStates?.loadedConductors?.status).toBe('valid');
+    expect(r.fieldStates?.loadedConductors?.value).toBe(3);
+    expect(r.ampacity.loadedConductorsUsed).toBe(3);
+  });
+
+  it.each([0, 1, 5])(
+    'overrides.loadedConductors=%s → invalid FieldState and downstream sizing blocked',
+    (loadedConductors) => {
+      const r = sizeCable({ ...BASE, overrides: { loadedConductors } });
+      expect(r.fieldStates?.loadedConductors?.source).toBe('override');
+      expect(r.fieldStates?.loadedConductors?.status).toBe('invalid');
+      expect(r.fieldStates?.loadedConductors?.value).toBeNull();
+      expect(r.fieldStates?.loadedConductors?.reason).toBe(
+        'loaded_conductors_override_out_of_range',
+      );
+      expect(r.recommendedCSAmm2).toBeNull();
+      expect(r.ampacity.status).toBe('FAIL');
+      expect(r.ampacity.loadedConductorsUsed).toBeNull();
+    },
+  );
 });
 
 // ─────────────────────────────────────────────────────────────────────
@@ -178,6 +202,16 @@ describe('AC-9: Armour CSA derivation', () => {
     expect(fs?.source).toBe('auto_dataset');
     expect(fs?.status).toBe('valid');
     expect((fs?.value as { kArmour?: number })?.kArmour).toBe(51);
+    expect(r.warnings.find((w) => w.code === 'W-CR-009')).toBeUndefined();
+    const armourSteps = r.auditTrail.filter((step) => step.criterion === 'armour');
+    expect(armourSteps.length).toBeGreaterThan(0);
+    expect(
+      armourSteps.find(
+        (step) =>
+          step.formula === 'armour CSA lookup (cableConstruction, conductorCsaMm2)' &&
+          step.derivedFields?.some((field) => field.fieldId === 'armourCsa'),
+      ),
+    ).toBeDefined();
   });
 
   it('armourType=none → fieldStates.armourCsa unavailable', () => {
@@ -188,6 +222,32 @@ describe('AC-9: Armour CSA derivation', () => {
     // armourType='none' takes the early-return-before-armour branch in the
     // pipeline; armourCsa is not populated at all.
     expect(r.fieldStates?.armourCsa).toBeUndefined();
+    expect(r.warnings.find((w) => w.code === 'W-CR-009')).toBeUndefined();
+  });
+
+  it('SWA armour with unsupported construction surfaces unavailable state and diagnostic warning', () => {
+    const r = sizeCable({
+      ...BASE,
+      cable: { ...BASE.cable, armourType: 'SWA', coreConfiguration: '4C' },
+    });
+
+    expect(r.fieldStates?.armourCsa?.source).toBe('auto_dataset');
+    expect(r.fieldStates?.armourCsa?.status).toBe('unavailable');
+    expect(r.fieldStates?.armourCsa?.reason).toBe('no_dataset_match');
+    expect(r.warnings.find((w) => w.code === 'W-CR-009')).toBeDefined();
+    expect(
+      r.auditTrail.find(
+        (step) =>
+          step.criterion === 'armour' &&
+          step.code === 'W-CR-009' &&
+          step.decision === 'INCOMPLETE',
+      ),
+    ).toBeDefined();
+    expect(
+      r.auditTrail.find(
+        (step) => step.formula === 'S_arm_req = Isc·√t / k_arm' && step.decision === 'PASS',
+      ),
+    ).toBeUndefined();
   });
 
   it('overrides.armourCsaMm2 emits W-CR-004 + source=override', () => {
@@ -197,8 +257,27 @@ describe('AC-9: Armour CSA derivation', () => {
       overrides: { armourCsaMm2: 200 },
     });
     expect(r.warnings.find((w) => w.code === 'W-CR-004')).toBeDefined();
+    expect(r.warnings.find((w) => w.code === 'W-CR-009')).toBeUndefined();
     expect(r.fieldStates?.armourCsa?.source).toBe('override');
+    expect(r.fieldStates?.armourCsa?.status).toBe('valid');
   });
+
+  it.each([0, -10])(
+    'SWA armour with overrides.armourCsaMm2=%s → invalid FieldState, no dataset fallback',
+    (armourCsaMm2) => {
+      const r = sizeCable({
+        ...BASE,
+        cable: { ...BASE.cable, armourType: 'SWA' },
+        overrides: { armourCsaMm2 },
+      });
+      expect(r.fieldStates?.armourCsa?.source).toBe('override');
+      expect(r.fieldStates?.armourCsa?.status).toBe('invalid');
+      expect(r.fieldStates?.armourCsa?.value).toBeNull();
+      expect(r.fieldStates?.armourCsa?.reason).toBe('armour_csa_override_must_be_positive');
+      expect(r.warnings.find((w) => w.code === 'W-CR-004')).toBeUndefined();
+      expect(r.warnings.find((w) => w.code === 'W-CR-009')).toBeUndefined();
+    },
+  );
 
   it('armour SC verification: oversize armour passes silently', () => {
     const r = sizeCable({
