@@ -986,6 +986,32 @@ export function sizeCable(input: CircuitInput, options: SizeCableOptions = {}): 
           ...(armPass ? {} : { code: 'W-CR-007' }),
         });
       }
+    } else {
+      audit.add({
+        criterion: 'shortCircuit',
+        inputs: {
+          armourType: input.cable.armourType,
+          conductorCsaMm2: recommended,
+        },
+        formula: 'armour CSA lookup (cableConstruction, conductorCsaMm2)',
+        intermediateValues: {
+          armourCsaStatus: armRes.state.status,
+          armourCsaReason: armRes.state.reason ?? null,
+        },
+        decision: armRes.state.status === 'invalid' ? 'FAIL' : 'INCOMPLETE',
+        reason:
+          armRes.state.status === 'invalid'
+            ? 'armour CSA override is invalid; armour short-circuit verification was not evaluated'
+            : 'armour CSA / k_armour unavailable; armour short-circuit verification was not evaluated',
+        ...(armRes.warnings.some((w) => w.code === 'W-CR-009') ? { code: 'W-CR-009' } : {}),
+        derivedFields: [
+          {
+            fieldId: 'armourCsa',
+            state: armRes.state,
+            description: 'Armour CSA / k_armour lookup state',
+          },
+        ],
+      });
     }
   }
 

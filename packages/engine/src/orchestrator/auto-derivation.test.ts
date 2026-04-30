@@ -202,6 +202,7 @@ describe('AC-9: Armour CSA derivation', () => {
     expect(fs?.source).toBe('auto_dataset');
     expect(fs?.status).toBe('valid');
     expect((fs?.value as { kArmour?: number })?.kArmour).toBe(51);
+    expect(r.warnings.find((w) => w.code === 'W-CR-009')).toBeUndefined();
   });
 
   it('armourType=none → fieldStates.armourCsa unavailable', () => {
@@ -212,6 +213,29 @@ describe('AC-9: Armour CSA derivation', () => {
     // armourType='none' takes the early-return-before-armour branch in the
     // pipeline; armourCsa is not populated at all.
     expect(r.fieldStates?.armourCsa).toBeUndefined();
+    expect(r.warnings.find((w) => w.code === 'W-CR-009')).toBeUndefined();
+  });
+
+  it('SWA armour with unsupported construction surfaces unavailable state and diagnostic warning', () => {
+    const r = sizeCable({
+      ...BASE,
+      cable: { ...BASE.cable, armourType: 'SWA', coreConfiguration: '4C' },
+    });
+
+    expect(r.fieldStates?.armourCsa?.source).toBe('auto_dataset');
+    expect(r.fieldStates?.armourCsa?.status).toBe('unavailable');
+    expect(r.fieldStates?.armourCsa?.reason).toBe('no_dataset_match');
+    expect(r.warnings.find((w) => w.code === 'W-CR-009')).toBeDefined();
+    expect(
+      r.auditTrail.find(
+        (step) => step.code === 'W-CR-009' && step.decision === 'INCOMPLETE',
+      ),
+    ).toBeDefined();
+    expect(
+      r.auditTrail.find(
+        (step) => step.formula === 'S_arm_req = Isc·√t / k_arm' && step.decision === 'PASS',
+      ),
+    ).toBeUndefined();
   });
 
   it('overrides.armourCsaMm2 emits W-CR-004 + source=override', () => {
@@ -221,7 +245,9 @@ describe('AC-9: Armour CSA derivation', () => {
       overrides: { armourCsaMm2: 200 },
     });
     expect(r.warnings.find((w) => w.code === 'W-CR-004')).toBeDefined();
+    expect(r.warnings.find((w) => w.code === 'W-CR-009')).toBeUndefined();
     expect(r.fieldStates?.armourCsa?.source).toBe('override');
+    expect(r.fieldStates?.armourCsa?.status).toBe('valid');
   });
 
   it.each([0, -10])(
@@ -237,6 +263,7 @@ describe('AC-9: Armour CSA derivation', () => {
       expect(r.fieldStates?.armourCsa?.value).toBeNull();
       expect(r.fieldStates?.armourCsa?.reason).toBe('armour_csa_override_must_be_positive');
       expect(r.warnings.find((w) => w.code === 'W-CR-004')).toBeUndefined();
+      expect(r.warnings.find((w) => w.code === 'W-CR-009')).toBeUndefined();
     },
   );
 

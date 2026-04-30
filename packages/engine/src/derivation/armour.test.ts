@@ -64,6 +64,7 @@ describe('deriveArmour — dataset lookup', () => {
     );
     expect(r1.state.status).toBe('unavailable');
     expect(r1.state.reason).toBe('not_applicable');
+    expect(r1.warnings.find((w) => w.code === 'W-CR-009')).toBeUndefined();
 
     const r2 = deriveArmour(
       { ...BASE, cable: { ...BASE.cable, armourType: undefined } },
@@ -83,6 +84,7 @@ describe('deriveArmour — dataset lookup', () => {
     const r = deriveArmour(BASE, ds, 1000);
     expect(r.state.status).toBe('unavailable');
     expect(r.state.reason).toBe('no_dataset_match');
+    expect(r.warnings.find((w) => w.code === 'W-CR-009')).toBeDefined();
   });
 
   it('unavailable on construction miss (PVC + SWA not in dataset)', () => {
@@ -93,6 +95,7 @@ describe('deriveArmour — dataset lookup', () => {
     );
     expect(r.state.status).toBe('unavailable');
     expect(r.state.reason).toBe('no_dataset_match');
+    expect(r.warnings.find((w) => w.code === 'W-CR-009')).toBeDefined();
   });
 });
 

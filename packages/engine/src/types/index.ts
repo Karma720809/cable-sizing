@@ -569,7 +569,12 @@ export type WarningCode =
    * tables, so 3-loaded was used. Harmonic / 4-loaded derating
    * (k4) is explicitly out of scope per §6.2 (CR-OQ-3).
    */
-  | 'W-CR-008';
+  | 'W-CR-008'
+  /**
+   * Armour was selected but armour CSA / k_armour could not be resolved,
+   * so armour short-circuit verification was not evaluated.
+   */
+  | 'W-CR-009';
 
 // ─────────────────────────────────────────────────────────────────────
 // Dataset shape (matches iec60364_lv_v1 on disk)
