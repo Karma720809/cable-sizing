@@ -227,6 +227,12 @@ export const INITIAL_FORM: FormState = {
   armourCsaOverride: 50,
 };
 
+export function normalizeTopologyForPhase(phase: 1 | 3, topology: Topology): Topology {
+  if (phase === 1 && (topology === '3ph3w' || topology === '3ph4w')) return '1ph2w';
+  if (phase === 3 && (topology === '1ph2w' || topology === '1ph3w')) return '3ph4w';
+  return topology;
+}
+
 // ─── Form → MvCircuitInput ─────────────────────────────────────────────
 
 /** Assemble a raw MvCircuitInput from the form state. */
@@ -311,12 +317,7 @@ export function buildCircuitInput(f: FormState): unknown {
   // already snaps these together, but external mutations (e.g. test
   // fixtures that flip `phase` directly) need the same guarantee so the
   // engine's loadedConductors derivation reflects the user-visible phase.
-  let topology: Topology = f.topology;
-  if (f.phase === 1 && (topology === '3ph3w' || topology === '3ph4w')) {
-    topology = '1ph2w';
-  } else if (f.phase === 3 && (topology === '1ph2w' || topology === '1ph3w')) {
-    topology = '3ph4w';
-  }
+  const topology = normalizeTopologyForPhase(f.phase, f.topology);
 
   // v1.3 — overrides envelope (CR-OQ-1, CR-OQ-3, CR-OQ-7).
   const overrides: Record<string, unknown> = {};
@@ -373,7 +374,7 @@ export function buildCircuitInput(f: FormState): unknown {
 
 interface Props {
   value: FormState;
-  onChange: (next: FormState) => void;
+  onChange: React.Dispatch<React.SetStateAction<FormState>>;
   onSubmit: () => void;
   busy: boolean;
   /** Last successful sizing result — drives DerivedFieldDisplay rows. */
@@ -388,7 +389,8 @@ export function CircuitForm({
   result,
 }: Props): React.ReactElement {
   const set = <K extends keyof FormState>(k: K, v: FormState[K]): void =>
-    onChange({ ...value, [k]: v });
+    onChange((prev) => ({ ...prev, [k]: v }));
+  const update = (fn: (prev: FormState) => FormState): void => onChange(fn);
 
   return (
     <form
@@ -416,7 +418,7 @@ export function CircuitForm({
       {value.voltageClass === 'MV' ? (
         <MvFields value={value} set={set} />
       ) : (
-        <LvFields value={value} set={set} result={result ?? null} />
+        <LvFields value={value} set={set} update={update} result={result ?? null} />
       )}
 
       <button type="submit" disabled={busy}>
@@ -434,8 +436,12 @@ interface SubFormProps {
 function LvFields({
   value,
   set,
+  update,
   result,
-}: SubFormProps & { result: SizingResult | null }): React.ReactElement {
+}: SubFormProps & {
+  update: (fn: (prev: FormState) => FormState) => void;
+  result: SizingResult | null;
+}): React.ReactElement {
   const designCurrentState = result?.fieldStates?.designCurrent;
   const loadedConductorsState = result?.fieldStates?.loadedConductors;
   const armourCsaState = result?.fieldStates?.armourCsa;
@@ -528,15 +534,11 @@ function LvFields({
           ]}
           set={(s) => {
             const p = Number(s) as 1 | 3;
-            set('phase', p);
-            // Keep topology coherent: snap to a sensible default when the
-            // user flips the phase selector. They can pick a different
-            // topology explicitly afterward.
-            if (p === 1 && (value.topology === '3ph3w' || value.topology === '3ph4w')) {
-              set('topology', '1ph2w');
-            } else if (p === 3 && (value.topology === '1ph2w' || value.topology === '1ph3w')) {
-              set('topology', '3ph4w');
-            }
+            update((prev) => ({
+              ...prev,
+              phase: p,
+              topology: normalizeTopologyForPhase(p, prev.topology),
+            }));
           }}
         />
         <SelectField
