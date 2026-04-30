@@ -1,0 +1,25 @@
+{
+  "id": "GC-LV-23-1PH2W",
+  "description": "General load 5 kW / 230 V / 1-phase 2-wire / method C — IB_1PH_KW and loadedConductors=2 coverage.",
+  "spec": "Golden Patch A / topology=1ph2w",
+  "input": {
+    "load": { "type": "general", "powerKW": 5, "powerFactor": 0.9, "efficiency": 1.0, "demandFactor": 1.0 },
+    "system": { "voltageV": 230, "phase": 1, "frequencyHz": 50, "topology": "1ph2w" },
+    "cable": { "conductorMaterial": "Cu", "insulationType": "PVC", "coreConfiguration": "3C+N", "cableType": "multicore" },
+    "installation": { "methodCode": "C", "ambientTempC": 30, "soilResistivityK_m_W": null, "groupCount": 1 },
+    "route": { "lengthM": 50 },
+    "protection": { "deviceType": "MCB", "ratedCurrentA": 32, "operatingCurrentI2A": 46.4, "tripTimeS": 0.1, "shortCircuitKA": 6 },
+    "projectPolicy": { "maxVoltageDropPercent": 5, "useReactance": false, "resistanceModel": "fixed_reference", "roundingPolicy": "next_standard_csa" }
+  },
+  "expected": {
+    "designCurrentApprox": 24.15,
+    "designCurrentTolerance": 0.01,
+    "overallStatus": "PASS",
+    "recommendedCSAmm2": 25,
+    "fieldStates": {
+      "designCurrent": { "source": "auto_formula", "status": "valid", "formula": "IB_1PH_KW" },
+      "loadedConductors": { "source": "auto_formula", "status": "valid", "valueExact": 2 }
+    },
+    "loadedConductorsUsedExact": 2
+  }
+}

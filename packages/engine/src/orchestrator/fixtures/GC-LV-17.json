@@ -1,0 +1,25 @@
+{
+  "id": "GC-LV-17-MOTOR-FLA-NULL-FALLBACK",
+  "description": "Motor load with fla=null and valid powerKW / 380 V / 3-phase 3-wire — falls back to kW-based IB_3PH_KW derivation.",
+  "spec": "Golden Patch A / load.type=motor / FLA blank fallback",
+  "input": {
+    "load": { "type": "motor", "powerKW": 25, "fla": null, "powerFactor": 0.85, "efficiency": 0.92, "demandFactor": 1.0 },
+    "system": { "voltageV": 380, "phase": 3, "frequencyHz": 50, "topology": "3ph3w" },
+    "cable": { "conductorMaterial": "Cu", "insulationType": "PVC", "coreConfiguration": "3C", "cableType": "multicore" },
+    "installation": { "methodCode": "C", "ambientTempC": 30, "soilResistivityK_m_W": null, "groupCount": 1 },
+    "route": { "lengthM": 50 },
+    "protection": { "deviceType": "MCB", "ratedCurrentA": 50, "operatingCurrentI2A": 72.5, "tripTimeS": 0.1, "shortCircuitKA": 10 },
+    "projectPolicy": { "maxVoltageDropPercent": 5, "useReactance": false, "resistanceModel": "fixed_reference", "roundingPolicy": "next_standard_csa" }
+  },
+  "expected": {
+    "designCurrentApprox": 48.57,
+    "designCurrentTolerance": 0.01,
+    "overallStatus": "PASS",
+    "recommendedCSAmm2": 35,
+    "fieldStates": {
+      "designCurrent": { "source": "auto_formula", "status": "valid", "formula": "IB_3PH_KW" },
+      "loadedConductors": { "source": "auto_formula", "status": "valid", "valueExact": 3 }
+    },
+    "loadedConductorsUsedExact": 3
+  }
+}

@@ -51,6 +51,10 @@ import gc12 from './GC-LV-12.json' with { type: 'json' };
 import gc13 from './GC-LV-13.json' with { type: 'json' };
 import gc14 from './GC-LV-14.json' with { type: 'json' };
 import gc15 from './GC-LV-15.json' with { type: 'json' };
+import gc16 from './GC-LV-16.json' with { type: 'json' };
+import gc17 from './GC-LV-17.json' with { type: 'json' };
+import gc23 from './GC-LV-23.json' with { type: 'json' };
+import gc24 from './GC-LV-24.json' with { type: 'json' };
 
 interface FieldStateExpectation {
   source?: FieldSource;
@@ -90,7 +94,7 @@ interface Fixture {
 const FIXTURES: ReadonlyArray<Fixture> = [
   auto01, auto02, auto03, auto04, auto05,
   gc01, gc02, gc03, gc04, gc05, gc06, gc07, gc08, gc09, gc10, gc11, gc12,
-  gc13, gc14, gc15,
+  gc13, gc14, gc15, gc16, gc17, gc23, gc24,
 ] as Fixture[];
 
 describe.each<Fixture>(FIXTURES as Fixture[])('$id — $description', (fx) => {
